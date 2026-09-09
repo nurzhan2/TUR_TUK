@@ -37,7 +37,7 @@ class CatalogScreen extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: TextButton(
-                    onPressed: () => context.push(AppRoutes.productPath('demo')),
+                    onPressed: () => context.push(AppRoutes.productPath(1)),
                     child: const Text('Открыть карточку товара (демо)'),
                   ),
                 ),

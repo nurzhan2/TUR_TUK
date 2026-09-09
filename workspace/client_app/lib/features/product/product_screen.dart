@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class ProductScreen extends StatelessWidget {
   const ProductScreen({required this.productId, super.key});
 
-  final String productId;
+  final int productId;
 
   @override
   Widget build(BuildContext context) {
