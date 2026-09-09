@@ -1,0 +1,80 @@
+{% extends "admin/base.html" %}
+{% block title %}Заказы — TUR TUK админка{% endblock %}
+{% block content %}
+<style>
+    .filter-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+    .filter-row label { font-size: 13px; color: var(--muted); }
+    .filter-row input, .filter-row select { margin: 4px 0 0; }
+    table.orders-table { width: 100%; border-collapse: collapse; }
+    table.orders-table th, table.orders-table td {
+        text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 14px;
+    }
+    table.orders-table th { color: var(--muted); font-weight: 600; }
+</style>
+
+<div class="card" style="margin-bottom:16px;">
+    <form method="get" action="/admin/orders">
+        <div class="filter-row">
+            <label>Статус
+                <select name="status">
+                    <option value="">Все статусы</option>
+                    {% for value, label in status_labels.items() %}
+                    <option value="{{ value }}" {% if value == filters.status %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Дата
+                <input type="date" name="date" value="{{ filters.date }}">
+            </label>
+            <label>Клиент / отель
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="имя, телефон или отель">
+            </label>
+            <button type="submit">Применить</button>
+            <a class="button" href="/admin/orders">Сбросить</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Клиент</th>
+                <th>Отель / номер</th>
+                <th>Статус</th>
+                <th>Курьер</th>
+                <th>Сумма</th>
+                <th>Создан</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if admin is none %}
+            <tr>
+                <td colspan="8" class="muted">
+                    Данные заказов видны только персоналу — <a href="/admin/login">войдите</a>, чтобы посмотреть список.
+                </td>
+            </tr>
+            {% else %}
+            {% for order, client, courier in rows %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ client.name or client.phone }}</td>
+                <td>{{ order.hotel_name }}, {{ order.room_number }}</td>
+                <td>{{ status_labels.get(order.status.value, order.status.value) }}</td>
+                <td>{{ (courier.name or courier.phone) if courier else "—" }}</td>
+                <td>{{ "%.2f"|format(order.total|float) }} ₽</td>
+                <td>{{ order.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+                <td><a class="button" href="/admin/orders/{{ order.id }}">Открыть</a></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="muted">Заказов не найдено.</td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

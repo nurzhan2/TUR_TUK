@@ -1,0 +1,93 @@
+{% extends "admin/base.html" %}
+{% block title %}Заказ №{{ order.id }} — TUR TUK админка{% endblock %}
+{% block content %}
+<style>
+    .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
+    table.items-table, table.history-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    table.items-table th, table.items-table td,
+    table.history-table th, table.history-table td {
+        text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 14px;
+    }
+    .field { margin: 10px 0; }
+    .field .label { color: var(--muted); font-size: 12px; }
+    form.inline { margin-top: 8px; display: flex; gap: 8px; align-items: center; }
+    form.inline select { margin: 0; width: auto; }
+    h2.section { font-size: 15px; margin-bottom: 4px; }
+</style>
+
+<p><a href="/admin/orders">&larr; К списку заказов</a></p>
+
+<div class="detail-grid">
+    <div class="card">
+        <h1 style="font-size:18px; margin-top:0;">Заказ №{{ order.id }}</h1>
+
+        <div class="field"><span class="label">Статус</span><br>{{ status_labels.get(order.status.value, order.status.value) }}</div>
+        <div class="field"><span class="label">Клиент</span><br>{{ client.name or "—" }}, {{ client.phone }}</div>
+        <div class="field"><span class="label">Отель / номер</span><br>{{ order.hotel_name }}, {{ order.room_number }}</div>
+        <div class="field"><span class="label">Курьер</span><br>{{ (courier.name or courier.phone) if courier else "не назначен" }}</div>
+        <div class="field"><span class="label">Сумма</span><br>{{ "%.2f"|format(order.total|float) }} ₽</div>
+        <div class="field"><span class="label">Оплата</span><br>{{ order.payment_status.value }}</div>
+        <div class="field"><span class="label">Создан</span><br>{{ order.created_at.strftime("%d.%m.%Y %H:%M") }}</div>
+
+        <h2 class="section">Товары</h2>
+        <table class="items-table">
+            <thead><tr><th>Товар</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead>
+            <tbody>
+                {% for item in order.items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ "%.2f"|format(item.price|float) }} ₽</td>
+                    <td>{{ "%.2f"|format((item.price|float) * item.quantity) }} ₽</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="muted">В заказе нет позиций.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 class="section">История статусов</h2>
+        <table class="history-table">
+            <thead><tr><th>Когда</th><th>Из</th><th>В</th><th>Кто</th></tr></thead>
+            <tbody>
+                {% for log, changer in log_rows %}
+                <tr>
+                    <td>{{ log.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+                    <td>{{ status_labels.get(log.from_status.value, log.from_status.value) }}</td>
+                    <td>{{ status_labels.get(log.to_status.value, log.to_status.value) }}</td>
+                    <td>{{ changer.name or changer.phone }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="muted">Изменений статуса ещё не было.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2 class="section" style="margin-top:0;">Сменить статус вручную</h2>
+        <form class="inline" method="post" action="/admin/orders/{{ order.id }}/status">
+            <select name="status">
+                {% for value, label in statuses %}
+                <option value="{{ value }}" {% if value == order.status.value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Сохранить</button>
+        </form>
+
+        <h2 class="section">Назначить курьера</h2>
+        {% if couriers %}
+        <form class="inline" method="post" action="/admin/orders/{{ order.id }}/assign-courier">
+            <select name="courier_id">
+                {% for c in couriers %}
+                <option value="{{ c.id }}" {% if courier and c.id == courier.id %}selected{% endif %}>{{ c.name or c.phone }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Назначить</button>
+        </form>
+        {% else %}
+        <p class="muted">Курьеров пока нет.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

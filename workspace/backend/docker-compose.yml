@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tur_tuk
+      POSTGRES_PASSWORD: tur_tuk
+      POSTGRES_DB: tur_tuk
+    ports:
+      # 5432 host-side collides with a native PostgreSQL Windows service on
+      # this machine (postgres.exe listening on 127.0.0.1:5432) — connections
+      # to localhost:5432 race between the two non-deterministically. 5433
+      # avoids the conflict; the container's own port stays 5432.
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tur_tuk -d tur_tuk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

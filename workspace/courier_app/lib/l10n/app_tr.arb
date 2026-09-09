@@ -1,0 +1,39 @@
+{
+  "@@locale": "tr",
+  "appTitle": "TUR TUK Kurye",
+
+  "authTitle": "Kurye girişi",
+  "phoneLabel": "Telefon numarası",
+  "phoneHint": "+90 5xx xxx xx xx",
+  "sendCodeButton": "Kod gönder",
+  "codeLabel": "SMS kodu",
+  "codeHint": "0000",
+  "verifyCodeButton": "Onayla",
+  "resendCodeButton": "Kodu tekrar gönder",
+  "changePhoneButton": "Numarayı değiştir",
+  "authGenericError": "Giriş başarısız. Lütfen tekrar deneyin.",
+  "authInvalidCode": "Kod hatalı veya süresi dolmuş",
+  "authPhoneRequired": "Telefon numaranızı girin",
+  "authCodeRequired": "SMS kodunu girin",
+
+  "ordersTitle": "Yeni siparişler",
+  "ordersEmpty": "Henüz yeni sipariş yok",
+  "ordersLoadError": "Siparişler yüklenemedi",
+  "ordersRetryButton": "Tekrar dene",
+  "orderNumber": "Sipariş №{id}",
+  "@orderNumber": {
+    "placeholders": {"id": {"type": "int"}}
+  },
+  "orderStatusCreated": "oluşturuldu",
+  "orderStatusAccepted": "kabul edildi",
+  "orderStatusAssembling": "hazırlanıyor",
+  "orderStatusDelivering": "yolda",
+  "orderStatusDelivered": "teslim edildi",
+  "orderStatusCancelled": "iptal edildi",
+
+  "logoutButton": "Çıkış yap",
+
+  "languageRu": "Русский",
+  "languageEn": "English",
+  "languageTr": "Türkçe"
+}

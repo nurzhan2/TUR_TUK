@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TUR TUK — админка{% endblock %}</title>
+    <style>
+        :root {
+            --bordo: #7a1f34;
+            --bordo-dark: #5c1727;
+            --bg: #f7f5f4;
+            --card: #ffffff;
+            --border: #e4dedd;
+            --text: #262121;
+            --muted: #7a7170;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        header.topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 56px;
+            background: var(--bordo);
+            color: #fff;
+        }
+        header.topbar .brand { font-weight: 600; letter-spacing: .02em; }
+        .layout { display: flex; min-height: calc(100vh - 56px); }
+        nav.sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 16px 0;
+        }
+        nav.sidebar a {
+            display: block;
+            padding: 10px 24px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        nav.sidebar a:hover { background: var(--bg); color: var(--bordo); }
+        main.content { flex: 1; padding: 24px; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .muted { color: var(--muted); }
+        a.button, button {
+            background: var(--bordo);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        a.button:hover, button:hover { background: var(--bordo-dark); }
+        .error { color: var(--bordo-dark); margin: 8px 0; }
+        input {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            margin: 6px 0 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <span class="brand">TUR TUK — админка</span>
+    </header>
+    <div class="layout">
+        {% block nav %}
+        <nav class="sidebar">
+            {% for label, href in nav_items|default([]) %}
+            <a href="{{ href }}">{{ label }}</a>
+            {% endfor %}
+        </nav>
+        {% endblock %}
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

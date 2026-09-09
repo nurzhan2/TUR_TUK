@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+{% block title %}Изменить отель — TUR TUK админка{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 480px;">
+    <h1 style="font-size: 18px; margin-top: 0;">Изменить отель</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    <form method="post" action="{{ form_action }}">
+        <label for="name">Название</label>
+        <input id="name" name="name" type="text" value="{{ hotel.name }}" required>
+
+        <label for="address">Адрес</label>
+        <input id="address" name="address" type="text" value="{{ hotel.address or '' }}">
+
+        <label for="category">Категория</label>
+        <input id="category" name="category" type="text" value="{{ hotel.category or '' }}" placeholder="3, 4, 5, HV-1...">
+
+        <label for="district">Район</label>
+        <input id="district" name="district" type="text" value="{{ hotel.district or '' }}">
+
+        <label for="rating">Рейтинг</label>
+        <input id="rating" name="rating" type="text" value="{{ hotel.rating if hotel.rating is not none else '' }}">
+
+        <label for="lat">Широта (lat)</label>
+        <input id="lat" name="lat" type="text" value="{{ hotel.lat if hotel.lat is not none else '' }}">
+
+        <label for="lon">Долгота (lon)</label>
+        <input id="lon" name="lon" type="text" value="{{ hotel.lon if hotel.lon is not none else '' }}">
+
+        <button type="submit">Сохранить</button>
+        <a class="button" href="/admin/hotels" style="background: transparent; color: var(--bordo); margin-left: 8px;">Отмена</a>
+    </form>
+</div>
+{% endblock %}

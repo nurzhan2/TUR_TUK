@@ -1,0 +1,11 @@
+{% extends "admin/base.html" %}
+{% block title %}Дашборд — TUR TUK админка{% endblock %}
+{% block content %}
+<div class="card">
+    <h1 style="font-size: 18px; margin-top: 0;">Добро пожаловать{% if admin.name %}, {{ admin.name }}{% endif %}</h1>
+    <p class="muted">
+        Роль: {{ admin.role.name }}. Разделы товаров, заказов, пользователей,
+        курьеров, отелей и промокодов появятся здесь по мере готовности.
+    </p>
+</div>
+{% endblock %}

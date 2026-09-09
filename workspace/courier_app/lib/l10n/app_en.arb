@@ -1,0 +1,39 @@
+{
+  "@@locale": "en",
+  "appTitle": "TUR TUK Courier",
+
+  "authTitle": "Courier sign in",
+  "phoneLabel": "Phone number",
+  "phoneHint": "+90 5xx xxx xx xx",
+  "sendCodeButton": "Send code",
+  "codeLabel": "SMS code",
+  "codeHint": "0000",
+  "verifyCodeButton": "Confirm",
+  "resendCodeButton": "Resend code",
+  "changePhoneButton": "Change number",
+  "authGenericError": "Sign in failed. Please try again.",
+  "authInvalidCode": "Invalid or expired code",
+  "authPhoneRequired": "Enter your phone number",
+  "authCodeRequired": "Enter the SMS code",
+
+  "ordersTitle": "New orders",
+  "ordersEmpty": "No new orders yet",
+  "ordersLoadError": "Failed to load orders",
+  "ordersRetryButton": "Retry",
+  "orderNumber": "Order #{id}",
+  "@orderNumber": {
+    "placeholders": {"id": {"type": "int"}}
+  },
+  "orderStatusCreated": "created",
+  "orderStatusAccepted": "accepted",
+  "orderStatusAssembling": "assembling",
+  "orderStatusDelivering": "delivering",
+  "orderStatusDelivered": "delivered",
+  "orderStatusCancelled": "cancelled",
+
+  "logoutButton": "Log out",
+
+  "languageRu": "Русский",
+  "languageEn": "English",
+  "languageTr": "Türkçe"
+}

@@ -1,0 +1,131 @@
+{
+  "@@locale": "ru",
+
+  "retry": "Повторить",
+  "cancel": "Отмена",
+  "save": "Сохранить",
+  "close": "Закрыть",
+  "loadingError": "Не удалось загрузить. Проверьте соединение и попробуйте ещё раз.",
+  "comingSoon": "Скоро появится",
+
+  "catalogTitle": "Каталог",
+  "searchHint": "Поиск товаров",
+  "categoriesAll": "Все",
+  "addToCart": "В корзину",
+  "outOfStock": "Нет в наличии",
+  "catalogEmpty": "Ничего не нашлось. Попробуйте другой запрос.",
+  "popular": "Популярное",
+
+  "productToCart": "Добавить в корзину",
+  "productInCart": "В корзине",
+  "productDescriptionTitle": "Описание",
+  "productSimilar": "Похожие товары",
+
+  "cartTitle": "Корзина",
+  "cartEmpty": "Корзина пуста. Загляните в каталог — привезём в отель за час.",
+  "cartTotal": "Итого",
+  "cartCheckout": "Оформить заказ",
+  "cartMinOrder": "Минимальная сумма заказа — {amount}",
+  "@cartMinOrder": {
+    "placeholders": {
+      "amount": { "type": "String", "example": "3 000 ₽" }
+    }
+  },
+  "cartClear": "Очистить корзину",
+  "cartItems": "{count, plural, one{{count} товар} few{{count} товара} many{{count} товаров} other{{count} товара}}",
+  "@cartItems": {
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+
+  "checkoutTitle": "Оформление заказа",
+  "checkoutHotel": "Отель",
+  "checkoutRoom": "Номер комнаты",
+  "checkoutComment": "Комментарий курьеру",
+  "checkoutPromo": "Промокод",
+  "checkoutPromoApply": "Применить",
+  "checkoutPromoApplied": "Промокод применён",
+  "checkoutPromoInvalid": "Промокод не подошёл",
+  "checkoutSubtotal": "Товары",
+  "checkoutDiscount": "Скидка",
+  "checkoutDelivery": "Доставка",
+  "checkoutTotal": "К оплате",
+  "checkoutPay": "Оплатить",
+  "checkoutPaymentCard": "Банковская карта",
+  "checkoutPaymentSbp": "СБП",
+  "checkoutSuccess": "Заказ оформлен",
+  "checkoutSuccessSub": "Курьер соберёт заказ и привезёт его на рецепцию вашего отеля.",
+  "checkoutMinOrderError": "Добавьте товаров — минимальная сумма заказа не набрана",
+
+  "ordersTitle": "Мои заказы",
+  "ordersEmpty": "Заказов пока нет. Первый можно собрать в каталоге.",
+  "orderNumber": "Заказ №{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": { "type": "int", "example": "1042" }
+    }
+  },
+  "orderRepeat": "Повторить заказ",
+  "orderDetails": "Подробнее",
+  "orderTrack": "Отследить",
+  "orderDeliveryTo": "Доставка в",
+  "orderCourier": "Курьер",
+  "orderPlacedAt": "Оформлен",
+  "orderItems": "Состав заказа",
+  "orderDeliveryPhoto": "Фото доставки",
+  "orderStatusCreated": "Создан",
+  "orderStatusAccepted": "Принят",
+  "orderStatusAssembling": "Собираем",
+  "orderStatusDelivering": "В пути",
+  "orderStatusDelivered": "Доставлен",
+  "orderStatusCancelled": "Отменён",
+
+  "trackingTitle": "Отслеживание",
+  "trackingEta": "{minutes, plural, one{Курьер приедет через {minutes} минуту} few{Курьер приедет через {minutes} минуты} many{Курьер приедет через {minutes} минут} other{Курьер приедет через {minutes} минуты}}",
+  "@trackingEta": {
+    "placeholders": {
+      "minutes": { "type": "int", "example": "12" }
+    }
+  },
+  "trackingCourierOnWay": "Курьер в пути",
+  "trackingArrived": "Курьер на месте",
+
+  "chatTitle": "Поддержка",
+  "chatHint": "Напишите сообщение",
+  "chatSend": "Отправить",
+  "chatBotLabel": "Бот",
+  "chatOperatorLabel": "Оператор",
+
+  "authTitle": "Добро пожаловать в TUR TUK",
+  "authSubtitle": "Доставим сувениры, косметику и продукты прямо в отель",
+  "authPhone": "Номер телефона",
+  "authGetCode": "Получить код",
+  "authCode": "Код из СМС",
+  "authConfirm": "Подтвердить",
+  "authResend": "{seconds, plural, one{Отправить код повторно через {seconds} секунду} few{Отправить код повторно через {seconds} секунды} many{Отправить код повторно через {seconds} секунд} other{Отправить код повторно через {seconds} секунды}}",
+  "@authResend": {
+    "placeholders": {
+      "seconds": { "type": "int", "example": "45" }
+    }
+  },
+  "authName": "Имя",
+  "authDob": "Дата рождения",
+  "authHotel": "Отель",
+  "authRoom": "Номер комнаты",
+  "authRegisterTitle": "Немного о вас",
+  "authContinue": "Продолжить",
+  "authInvalidCode": "Неверный код",
+
+  "profileTitle": "Профиль",
+  "profileLanguage": "Язык приложения",
+  "profileRussian": "Русский",
+  "profileEnglish": "English",
+  "profileTurkish": "Türkçe",
+  "profileMyOrders": "Мои заказы",
+  "profileSupport": "Поддержка",
+  "profileHotel": "Отель",
+  "profileRoom": "Номер комнаты",
+  "profileLogout": "Выйти",
+  "profileEdit": "Редактировать"
+}

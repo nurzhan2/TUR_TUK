@@ -1,0 +1,50 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tur_tuk
+          POSTGRES_PASSWORD: tur_tuk
+          POSTGRES_DB: tur_tuk
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tur_tuk -d tur_tuk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # переопределяет дефолт app/core/config.py (localhost:5433 — там из-за
+      # конфликта с нативным Postgres на машине владельца, см. docs/DECISIONS.md).
+      # На раннере CI такого конфликта нет, сервис слушает стандартный 5432.
+      DATABASE_URL: postgresql+asyncpg://tur_tuk:tur_tuk@localhost:5432/tur_tuk
+      JWT_SECRET_KEY: ci-test-secret-key
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run migrations
+        run: alembic upgrade head
+
+      - name: Run tests
+        run: pytest -q

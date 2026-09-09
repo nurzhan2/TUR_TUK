@@ -1,0 +1,131 @@
+{
+  "@@locale": "en",
+
+  "retry": "Try again",
+  "cancel": "Cancel",
+  "save": "Save",
+  "close": "Close",
+  "loadingError": "Could not load. Check your connection and try again.",
+  "comingSoon": "Coming soon",
+
+  "catalogTitle": "Catalogue",
+  "searchHint": "Search products",
+  "categoriesAll": "All",
+  "addToCart": "Add",
+  "outOfStock": "Out of stock",
+  "catalogEmpty": "Nothing found. Try a different search.",
+  "popular": "Popular",
+
+  "productToCart": "Add to cart",
+  "productInCart": "In cart",
+  "productDescriptionTitle": "Description",
+  "productSimilar": "Similar products",
+
+  "cartTitle": "Cart",
+  "cartEmpty": "Your cart is empty. Browse the catalogue — we deliver to your hotel within an hour.",
+  "cartTotal": "Total",
+  "cartCheckout": "Check out",
+  "cartMinOrder": "Minimum order is {amount}",
+  "@cartMinOrder": {
+    "placeholders": {
+      "amount": { "type": "String", "example": "3 000 ₽" }
+    }
+  },
+  "cartClear": "Clear cart",
+  "cartItems": "{count, plural, one{{count} item} other{{count} items}}",
+  "@cartItems": {
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+
+  "checkoutTitle": "Checkout",
+  "checkoutHotel": "Hotel",
+  "checkoutRoom": "Room number",
+  "checkoutComment": "Note for the courier",
+  "checkoutPromo": "Promo code",
+  "checkoutPromoApply": "Apply",
+  "checkoutPromoApplied": "Promo code applied",
+  "checkoutPromoInvalid": "Promo code did not work",
+  "checkoutSubtotal": "Items",
+  "checkoutDiscount": "Discount",
+  "checkoutDelivery": "Delivery",
+  "checkoutTotal": "To pay",
+  "checkoutPay": "Pay",
+  "checkoutPaymentCard": "Bank card",
+  "checkoutPaymentSbp": "SBP transfer",
+  "checkoutSuccess": "Order placed",
+  "checkoutSuccessSub": "The courier will pack your order and bring it to your hotel reception.",
+  "checkoutMinOrderError": "Add more items — the minimum order value is not reached",
+
+  "ordersTitle": "My orders",
+  "ordersEmpty": "No orders yet. Start with the catalogue.",
+  "orderNumber": "Order #{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": { "type": "int", "example": "1042" }
+    }
+  },
+  "orderRepeat": "Repeat order",
+  "orderDetails": "Details",
+  "orderTrack": "Track",
+  "orderDeliveryTo": "Delivering to",
+  "orderCourier": "Courier",
+  "orderPlacedAt": "Placed",
+  "orderItems": "Items",
+  "orderDeliveryPhoto": "Delivery photo",
+  "orderStatusCreated": "Created",
+  "orderStatusAccepted": "Accepted",
+  "orderStatusAssembling": "Packing",
+  "orderStatusDelivering": "On the way",
+  "orderStatusDelivered": "Delivered",
+  "orderStatusCancelled": "Cancelled",
+
+  "trackingTitle": "Tracking",
+  "trackingEta": "{minutes, plural, one{Courier arrives in {minutes} minute} other{Courier arrives in {minutes} minutes}}",
+  "@trackingEta": {
+    "placeholders": {
+      "minutes": { "type": "int", "example": "12" }
+    }
+  },
+  "trackingCourierOnWay": "Courier is on the way",
+  "trackingArrived": "Courier has arrived",
+
+  "chatTitle": "Support",
+  "chatHint": "Type a message",
+  "chatSend": "Send",
+  "chatBotLabel": "Bot",
+  "chatOperatorLabel": "Operator",
+
+  "authTitle": "Welcome to TUR TUK",
+  "authSubtitle": "Souvenirs, cosmetics and groceries delivered to your hotel",
+  "authPhone": "Phone number",
+  "authGetCode": "Get code",
+  "authCode": "SMS code",
+  "authConfirm": "Confirm",
+  "authResend": "{seconds, plural, one{Resend the code in {seconds} second} other{Resend the code in {seconds} seconds}}",
+  "@authResend": {
+    "placeholders": {
+      "seconds": { "type": "int", "example": "45" }
+    }
+  },
+  "authName": "Name",
+  "authDob": "Date of birth",
+  "authHotel": "Hotel",
+  "authRoom": "Room number",
+  "authRegisterTitle": "A little about you",
+  "authContinue": "Continue",
+  "authInvalidCode": "Wrong code",
+
+  "profileTitle": "Profile",
+  "profileLanguage": "App language",
+  "profileRussian": "Русский",
+  "profileEnglish": "English",
+  "profileTurkish": "Türkçe",
+  "profileMyOrders": "My orders",
+  "profileSupport": "Support",
+  "profileHotel": "Hotel",
+  "profileRoom": "Room number",
+  "profileLogout": "Log out",
+  "profileEdit": "Edit"
+}

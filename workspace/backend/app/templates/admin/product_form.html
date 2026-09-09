@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ "Изменить товар" if product else "Новый товар" }} — TUR TUK админка{% endblock %}
+{% block content %}
+<style>
+    select, textarea {
+        display: block; width: 100%; padding: 8px 10px; margin: 6px 0 14px;
+        border: 1px solid var(--border); border-radius: 6px; font-size: 14px; font-family: inherit;
+    }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 6px 0 14px; }
+    .checkbox-row input { display: inline-block; width: auto; margin: 0; }
+</style>
+
+<div class="card" style="max-width: 480px;">
+    <h1 style="font-size: 18px; margin-top: 0;">{{ "Изменить товар" if product else "Новый товар" }}</h1>
+    {% if admin is none %}
+    <p class="muted">Форма отправится после <a href="/admin/login">входа</a> — сохранение товаров доступно только персоналу.</p>
+    {% endif %}
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    <form method="post" action="{{ form_action }}" enctype="multipart/form-data">
+        <label for="name">Название</label>
+        <input id="name" name="name" type="text" value="{{ product.name if product else '' }}" required>
+
+        <label for="description">Описание</label>
+        <textarea id="description" name="description" rows="4">{{ product.description if product else '' }}</textarea>
+
+        <label for="price">Цена, ₽</label>
+        <input id="price" name="price" type="number" step="0.01" min="0" value="{{ product.price if product else '' }}" required>
+
+        <label for="category_id">Категория</label>
+        <select id="category_id" name="category_id" required>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if product and product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label class="checkbox-row">
+            <input type="checkbox" name="is_available" {% if not product or product.is_available %}checked{% endif %}>
+            В наличии
+        </label>
+
+        <label for="photo">Фото{% if product and product.photo_url %} (выберите новое, чтобы заменить текущее){% endif %}</label>
+        <input id="photo" name="photo" type="file" accept="image/jpeg,image/png">
+
+        <button type="submit">{{ "Сохранить" if product else "Добавить" }}</button>
+        <a class="button" href="/admin/products" style="background: transparent; color: var(--bordo); margin-left: 8px;">Отмена</a>
+    </form>
+</div>
+{% endblock %}

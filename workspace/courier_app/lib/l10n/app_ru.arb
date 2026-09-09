@@ -1,0 +1,43 @@
+{
+  "@@locale": "ru",
+  "appTitle": "TUR TUK Курьер",
+  "@appTitle": {"description": "Название приложения в списке приложений устройства"},
+
+  "authTitle": "Вход для курьеров",
+  "@authTitle": {"description": "Заголовок экрана авторизации"},
+  "phoneLabel": "Номер телефона",
+  "phoneHint": "+90 5xx xxx xx xx",
+  "sendCodeButton": "Отправить код",
+  "codeLabel": "Код из SMS",
+  "codeHint": "0000",
+  "verifyCodeButton": "Подтвердить",
+  "resendCodeButton": "Отправить код ещё раз",
+  "changePhoneButton": "Изменить номер",
+  "authGenericError": "Не удалось выполнить вход. Попробуйте ещё раз.",
+  "authInvalidCode": "Неверный или истёкший код",
+  "authPhoneRequired": "Введите номер телефона",
+  "authCodeRequired": "Введите код из SMS",
+
+  "ordersTitle": "Новые заказы",
+  "@ordersTitle": {"description": "Заголовок главного экрана курьера — список новых заказов"},
+  "ordersEmpty": "Пока нет новых заказов",
+  "ordersLoadError": "Не удалось загрузить заказы",
+  "ordersRetryButton": "Повторить",
+  "orderNumber": "Заказ №{id}",
+  "@orderNumber": {
+    "description": "Номер заказа в списке",
+    "placeholders": {"id": {"type": "int"}}
+  },
+  "orderStatusCreated": "принят",
+  "orderStatusAccepted": "принят курьером",
+  "orderStatusAssembling": "на сборке",
+  "orderStatusDelivering": "доставляется",
+  "orderStatusDelivered": "доставлен",
+  "orderStatusCancelled": "отменён",
+
+  "logoutButton": "Выйти",
+
+  "languageRu": "Русский",
+  "languageEn": "English",
+  "languageTr": "Türkçe"
+}

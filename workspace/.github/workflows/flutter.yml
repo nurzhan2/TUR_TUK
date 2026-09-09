@@ -1,0 +1,51 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # клиентское и курьерское приложения — оба Flutter (см. curated stack
+        # в брифе). Ни один каталог ещё не заведён (проект пока только
+        # backend/), поэтому job проверяет наличие pubspec.yaml и пропускает
+        # шаги, если приложения ещё нет — иначе любой пуш в backend/ падал бы
+        # на несуществующем каталоге мобильного приложения.
+        app: [mobile/client, mobile/courier]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check app exists
+        id: check
+        run: |
+          if [ -f "${{ matrix.app }}/pubspec.yaml" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::${{ matrix.app }} ещё не создан, шаги пропущены"
+          fi
+
+      - uses: subosito/flutter-action@v2
+        if: steps.check.outputs.exists == 'true'
+        with:
+          channel: stable
+
+      - name: flutter pub get
+        if: steps.check.outputs.exists == 'true'
+        working-directory: ${{ matrix.app }}
+        run: flutter pub get
+
+      - name: flutter analyze
+        if: steps.check.outputs.exists == 'true'
+        working-directory: ${{ matrix.app }}
+        run: flutter analyze
+
+      - name: flutter test
+        if: steps.check.outputs.exists == 'true'
+        working-directory: ${{ matrix.app }}
+        run: flutter test

@@ -1,0 +1,131 @@
+{
+  "@@locale": "tr",
+
+  "retry": "Tekrar dene",
+  "cancel": "İptal",
+  "save": "Kaydet",
+  "close": "Kapat",
+  "loadingError": "Yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+  "comingSoon": "Yakında",
+
+  "catalogTitle": "Katalog",
+  "searchHint": "Ürün ara",
+  "categoriesAll": "Tümü",
+  "addToCart": "Sepete ekle",
+  "outOfStock": "Stokta yok",
+  "catalogEmpty": "Sonuç bulunamadı. Farklı bir arama deneyin.",
+  "popular": "Popüler",
+
+  "productToCart": "Sepete ekle",
+  "productInCart": "Sepette",
+  "productDescriptionTitle": "Açıklama",
+  "productSimilar": "Benzer ürünler",
+
+  "cartTitle": "Sepet",
+  "cartEmpty": "Sepetiniz boş. Kataloğa göz atın — bir saat içinde otelinize getiriyoruz.",
+  "cartTotal": "Toplam",
+  "cartCheckout": "Siparişi tamamla",
+  "cartMinOrder": "En az sipariş tutarı {amount}",
+  "@cartMinOrder": {
+    "placeholders": {
+      "amount": { "type": "String", "example": "3 000 ₽" }
+    }
+  },
+  "cartClear": "Sepeti boşalt",
+  "cartItems": "{count, plural, one{{count} ürün} other{{count} ürün}}",
+  "@cartItems": {
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+
+  "checkoutTitle": "Sipariş",
+  "checkoutHotel": "Otel",
+  "checkoutRoom": "Oda numarası",
+  "checkoutComment": "Kuryeye not",
+  "checkoutPromo": "Promosyon kodu",
+  "checkoutPromoApply": "Uygula",
+  "checkoutPromoApplied": "Promosyon kodu uygulandı",
+  "checkoutPromoInvalid": "Promosyon kodu geçersiz",
+  "checkoutSubtotal": "Ürünler",
+  "checkoutDiscount": "İndirim",
+  "checkoutDelivery": "Teslimat",
+  "checkoutTotal": "Ödenecek tutar",
+  "checkoutPay": "Öde",
+  "checkoutPaymentCard": "Banka kartı",
+  "checkoutPaymentSbp": "SBP ile havale",
+  "checkoutSuccess": "Sipariş alındı",
+  "checkoutSuccessSub": "Kurye siparişinizi hazırlayıp otelinizin resepsiyonuna getirecek.",
+  "checkoutMinOrderError": "Biraz daha ürün ekleyin — en az sipariş tutarına ulaşılmadı",
+
+  "ordersTitle": "Siparişlerim",
+  "ordersEmpty": "Henüz sipariş yok. Kataloğa göz atarak başlayın.",
+  "orderNumber": "Sipariş No {id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": { "type": "int", "example": "1042" }
+    }
+  },
+  "orderRepeat": "Siparişi tekrarla",
+  "orderDetails": "Ayrıntılar",
+  "orderTrack": "Takip et",
+  "orderDeliveryTo": "Teslimat adresi",
+  "orderCourier": "Kurye",
+  "orderPlacedAt": "Oluşturulma",
+  "orderItems": "Sipariş içeriği",
+  "orderDeliveryPhoto": "Teslimat fotoğrafı",
+  "orderStatusCreated": "Oluşturuldu",
+  "orderStatusAccepted": "Kabul edildi",
+  "orderStatusAssembling": "Hazırlanıyor",
+  "orderStatusDelivering": "Yolda",
+  "orderStatusDelivered": "Teslim edildi",
+  "orderStatusCancelled": "İptal edildi",
+
+  "trackingTitle": "Takip",
+  "trackingEta": "{minutes, plural, one{Kurye {minutes} dakika içinde geliyor} other{Kurye {minutes} dakika içinde geliyor}}",
+  "@trackingEta": {
+    "placeholders": {
+      "minutes": { "type": "int", "example": "12" }
+    }
+  },
+  "trackingCourierOnWay": "Kurye yolda",
+  "trackingArrived": "Kurye geldi",
+
+  "chatTitle": "Destek",
+  "chatHint": "Mesaj yazın",
+  "chatSend": "Gönder",
+  "chatBotLabel": "Bot",
+  "chatOperatorLabel": "Operatör",
+
+  "authTitle": "TUR TUK'a hoş geldiniz",
+  "authSubtitle": "Hediyelik eşya, kozmetik ve gıdayı otelinize getiriyoruz",
+  "authPhone": "Telefon numarası",
+  "authGetCode": "Kod gönder",
+  "authCode": "SMS kodu",
+  "authConfirm": "Onayla",
+  "authResend": "{seconds, plural, one{Kodu {seconds} saniye sonra tekrar gönder} other{Kodu {seconds} saniye sonra tekrar gönder}}",
+  "@authResend": {
+    "placeholders": {
+      "seconds": { "type": "int", "example": "45" }
+    }
+  },
+  "authName": "Ad",
+  "authDob": "Doğum tarihi",
+  "authHotel": "Otel",
+  "authRoom": "Oda numarası",
+  "authRegisterTitle": "Sizi biraz tanıyalım",
+  "authContinue": "Devam et",
+  "authInvalidCode": "Kod hatalı",
+
+  "profileTitle": "Profil",
+  "profileLanguage": "Uygulama dili",
+  "profileRussian": "Русский",
+  "profileEnglish": "English",
+  "profileTurkish": "Türkçe",
+  "profileMyOrders": "Siparişlerim",
+  "profileSupport": "Destek",
+  "profileHotel": "Otel",
+  "profileRoom": "Oda numarası",
+  "profileLogout": "Çıkış yap",
+  "profileEdit": "Düzenle"
+}
