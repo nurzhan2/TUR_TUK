@@ -22,6 +22,10 @@ class DemoData {
   /// 53fad0634450, чтобы витрина и чат не расходились в цифрах).
   static const double minOrderTotal = 3000;
   static const double deliveryFee = 300;
+  /// Порог бесплатной доставки. Дублируется в `CartTotals` (файл другой
+  /// сессии); значения обязаны совпадать, иначе воронка и список заказов
+  /// покажут разные суммы.
+  static const double freeDeliveryFrom = 5000;
 
   /// Отель гостьи и точка старта курьера — координаты настоящие:
   /// Rixos Sungate на юге Кемера и склад в северной части посёлка.
@@ -564,12 +568,16 @@ class DemoData {
     String? deliveryPhotoAsset,
   }) {
     final subtotal = items.fold(0.0, (sum, item) => sum + item.lineTotal);
+    // Доставка бесплатна от 5000 ₽ — то же правило, что показывает воронка
+    // на корзине и чекауте. Без него итог в списке заказов расходился бы
+    // с суммой, которую гостья только что видела на кнопке «Оплатить».
+    final delivery = subtotal >= freeDeliveryFrom ? 0.0 : deliveryFee;
     return Order(
       id: id,
       status: status,
-      total: subtotal - discount + deliveryFee,
+      total: subtotal - discount + delivery,
       discount: discount,
-      deliveryFee: deliveryFee,
+      deliveryFee: delivery,
       // Значением по умолчанию поле const-объекта быть не может, поэтому
       // подстановка отеля гостьи стоит здесь, а не в сигнатуре.
       hotelName: hotelName ?? profile.hotelName,
