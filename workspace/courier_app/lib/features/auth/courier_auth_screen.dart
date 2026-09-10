@@ -64,9 +64,7 @@ class _CourierAuthScreenState extends State<CourierAuthScreen> {
               if (auth.errorMessage != null) ...[
                 const SizedBox(height: 16),
                 Text(
-                  auth.errorMessage == 'network_error'
-                      ? l10n.authGenericError
-                      : auth.errorMessage!,
+                  _errorText(l10n, auth.errorMessage!),
                   style: const TextStyle(color: AppColors.error),
                   textAlign: TextAlign.center,
                 ),
@@ -78,6 +76,19 @@ class _CourierAuthScreenState extends State<CourierAuthScreen> {
     );
   }
 }
+
+/// Текст ошибки под формой.
+///
+/// Репозиторий кладёт в `errorMessage` либо `detail` от бэкенда, либо
+/// известный КЛЮЧ. Ключи переводим, всё остальное показываем как пришло:
+/// подменять чужой `detail` общей формулировкой значит стереть настоящую
+/// причину отказа, а она бывает единственной подсказкой («номер не
+/// зарегистрирован как курьер»).
+String _errorText(AppLocalizations l10n, String message) => switch (message) {
+  'network_error' => l10n.authGenericError,
+  'authInvalidCode' => l10n.authInvalidCode,
+  _ => message,
+};
 
 class _PhoneStep extends StatelessWidget {
   const _PhoneStep({
