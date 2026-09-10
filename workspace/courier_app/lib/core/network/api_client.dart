@@ -62,6 +62,21 @@ class ApiClient {
     return _decode(response);
   }
 
+  /// `PATCH` нужен смене статуса заказа (`PATCH /orders/{id}/status` —
+  /// единственный способ провести заказ по стадиям, см. `OrdersRepository`).
+  Future<dynamic> patch(
+    String path, {
+    Map<String, dynamic>? body,
+    bool withAuth = true,
+  }) async {
+    final response = await _client.patch(
+      _uri(path),
+      headers: _headers(withAuth: withAuth),
+      body: body == null ? null : jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
   dynamic _decode(http.Response response) {
     final body = response.body.isEmpty ? null : jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode >= 200 && response.statusCode < 300) {
