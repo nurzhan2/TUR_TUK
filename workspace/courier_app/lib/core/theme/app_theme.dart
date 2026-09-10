@@ -204,7 +204,11 @@ class AppTheme {
       color: AppColors.textPrimary,
       height: 1.4,
     ),
-    bodySmall: TextStyle(fontSize: 13, color: AppColors.textMuted, height: 1.35),
+    bodySmall: TextStyle(
+      fontSize: 13,
+      color: AppColors.textMuted,
+      height: 1.35,
+    ),
     labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
     labelSmall: TextStyle(fontSize: 11, color: AppColors.textMuted),
   );

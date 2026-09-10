@@ -18,22 +18,79 @@
   "authPhoneRequired": "Введите номер телефона",
   "authCodeRequired": "Введите код из SMS",
 
-  "ordersTitle": "Новые заказы",
-  "@ordersTitle": {"description": "Заголовок главного экрана курьера — список новых заказов"},
-  "ordersEmpty": "Пока нет новых заказов",
+  "ordersTitle": "Заказы",
+  "@ordersTitle": {"description": "Заголовок главного экрана курьера"},
+  "ordersEmpty": "Пока нет заказов",
   "ordersLoadError": "Не удалось загрузить заказы",
   "ordersRetryButton": "Повторить",
   "orderNumber": "Заказ №{id}",
   "@orderNumber": {
-    "description": "Номер заказа в списке",
+    "description": "Номер заказа в списке и в заголовке карточки",
     "placeholders": {"id": {"type": "int"}}
   },
-  "orderStatusCreated": "принят",
-  "orderStatusAccepted": "принят курьером",
+
+  "sectionNew": "Новые",
+  "@sectionNew": {"description": "Секция списка: заказы, которые ещё никто не взял"},
+  "sectionInProgress": "В работе",
+  "sectionDone": "Выполненные",
+  "sectionEmpty": "Здесь пока пусто",
+
+  "orderAddress": "{hotel}, номер {room}",
+  "@orderAddress": {
+    "description": "Отель и номер комнаты одной строкой",
+    "placeholders": {
+      "hotel": {"type": "String"},
+      "room": {"type": "String"}
+    }
+  },
+  "orderItemsCount": "{count, plural, one{{count} позиция} few{{count} позиции} many{{count} позиций} other{{count} позиции}}",
+  "@orderItemsCount": {
+    "description": "Сколько позиций в заказе",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "orderNotFound": "Заказ не найден",
+  "orderItemsTitle": "Состав заказа",
+  "orderItemsUnavailable": "Состав заказа недоступен",
+  "orderClientTitle": "Клиент",
+  "orderCall": "Позвонить",
+  "orderHotel": "Отель",
+  "orderRoom": "Номер комнаты",
+  "orderTotal": "Сумма заказа",
+  "orderCreatedAt": "Оформлен в {time}",
+  "@orderCreatedAt": {
+    "description": "Время оформления заказа",
+    "placeholders": {"time": {"type": "String"}}
+  },
+
+  "orderStatusCreated": "новый",
+  "orderStatusAccepted": "принят",
   "orderStatusAssembling": "на сборке",
-  "orderStatusDelivering": "доставляется",
+  "orderStatusDelivering": "в пути",
   "orderStatusDelivered": "доставлен",
   "orderStatusCancelled": "отменён",
+
+  "actionAccept": "Принять",
+  "actionReject": "Отклонить",
+  "actionStartAssembly": "Начать сборку",
+  "actionDepart": "Выехал",
+  "actionDelivered": "Доставлен",
+  "actionRoute": "Маршрут",
+  "actionCancel": "Отмена",
+  "rejectConfirmTitle": "Отклонить заказ?",
+  "rejectConfirmText": "Заказ вернётся диспетчеру. Отменить это действие из приложения нельзя.",
+
+  "deliveryTitle": "Подтверждение доставки",
+  "deliveryHint": "Снимите коробку на рецепции — снимок подтверждает доставку.",
+  "deliveryTakePhoto": "Сфотографировать коробку",
+  "deliveryRetakePhoto": "Сделать другой снимок",
+  "deliveryConfirm": "Подтвердить доставку",
+  "deliveryDone": "Заказ доставлен",
+  "deliveryPhotoTitle": "Фото доставки",
+
+  "routeTitle": "Маршрут",
+  "routeCourier": "Курьер",
+  "routeOpenInNavigator": "Открыть в навигаторе",
+  "routeLaunchFailed": "Не удалось открыть навигатор",
 
   "logoutButton": "Выйти",
 

@@ -20,7 +20,8 @@ class ApiException implements Exception {
 /// разбирает JSON и превращает не-2xx ответы в [ApiException] в одном месте —
 /// каждый репозиторий не должен заново парсить `detail` из тела ошибки.
 class ApiClient {
-  ApiClient({http.Client? client, this.accessToken}) : _client = client ?? http.Client();
+  ApiClient({http.Client? client, this.accessToken})
+    : _client = client ?? http.Client();
 
   final http.Client _client;
 
@@ -44,8 +45,15 @@ class ApiClient {
     return headers;
   }
 
-  Future<dynamic> get(String path, {Map<String, dynamic>? query, bool withAuth = true}) async {
-    final response = await _client.get(_uri(path, query), headers: _headers(withAuth: withAuth));
+  Future<dynamic> get(
+    String path, {
+    Map<String, dynamic>? query,
+    bool withAuth = true,
+  }) async {
+    final response = await _client.get(
+      _uri(path, query),
+      headers: _headers(withAuth: withAuth),
+    );
     return _decode(response);
   }
 
@@ -78,7 +86,9 @@ class ApiClient {
   }
 
   dynamic _decode(http.Response response) {
-    final body = response.body.isEmpty ? null : jsonDecode(utf8.decode(response.bodyBytes));
+    final body = response.body.isEmpty
+        ? null
+        : jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     }

@@ -11,25 +11,78 @@
   "verifyCodeButton": "Onayla",
   "resendCodeButton": "Kodu tekrar gönder",
   "changePhoneButton": "Numarayı değiştir",
-  "authGenericError": "Giriş başarısız. Lütfen tekrar deneyin.",
-  "authInvalidCode": "Kod hatalı veya süresi dolmuş",
+  "authGenericError": "Giriş yapılamadı. Lütfen tekrar deneyin.",
+  "authInvalidCode": "Kod hatalı veya süresi geçmiş",
   "authPhoneRequired": "Telefon numaranızı girin",
-  "authCodeRequired": "SMS kodunu girin",
+  "authCodeRequired": "SMS ile gelen kodu girin",
 
-  "ordersTitle": "Yeni siparişler",
-  "ordersEmpty": "Henüz yeni sipariş yok",
+  "ordersTitle": "Siparişler",
+  "ordersEmpty": "Henüz sipariş yok",
   "ordersLoadError": "Siparişler yüklenemedi",
   "ordersRetryButton": "Tekrar dene",
-  "orderNumber": "Sipariş №{id}",
+  "orderNumber": "Sipariş #{id}",
   "@orderNumber": {
     "placeholders": {"id": {"type": "int"}}
   },
-  "orderStatusCreated": "oluşturuldu",
+
+  "sectionNew": "Yeni",
+  "sectionInProgress": "Devam eden",
+  "sectionDone": "Tamamlanan",
+  "sectionEmpty": "Burada henüz bir şey yok",
+
+  "orderAddress": "{hotel}, oda {room}",
+  "@orderAddress": {
+    "placeholders": {
+      "hotel": {"type": "String"},
+      "room": {"type": "String"}
+    }
+  },
+  "orderItemsCount": "{count, plural, one{{count} ürün} other{{count} ürün}}",
+  "@orderItemsCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "orderNotFound": "Sipariş bulunamadı",
+  "orderItemsTitle": "Sipariş içeriği",
+  "orderItemsUnavailable": "Sipariş içeriği görüntülenemiyor",
+  "orderClientTitle": "Müşteri",
+  "orderCall": "Ara",
+  "orderHotel": "Otel",
+  "orderRoom": "Oda numarası",
+  "orderTotal": "Sipariş tutarı",
+  "orderCreatedAt": "{time} tarihinde verildi",
+  "@orderCreatedAt": {
+    "placeholders": {"time": {"type": "String"}}
+  },
+
+  "orderStatusCreated": "yeni",
   "orderStatusAccepted": "kabul edildi",
   "orderStatusAssembling": "hazırlanıyor",
   "orderStatusDelivering": "yolda",
   "orderStatusDelivered": "teslim edildi",
   "orderStatusCancelled": "iptal edildi",
+
+  "actionAccept": "Kabul et",
+  "actionReject": "Reddet",
+  "actionStartAssembly": "Hazırlamaya başla",
+  "actionDepart": "Yola çıktım",
+  "actionDelivered": "Teslim edildi",
+  "actionRoute": "Güzergâh",
+  "actionCancel": "Vazgeç",
+  "rejectConfirmTitle": "Sipariş reddedilsin mi?",
+  "rejectConfirmText": "Sipariş dispeçere geri döner. Bu işlem uygulamadan geri alınamaz.",
+
+  "deliveryTitle": "Teslim onayı",
+  "deliveryHint": "Kutuyu resepsiyonda fotoğraflayın — fotoğraf teslimi doğrular.",
+  "deliveryTakePhoto": "Kutuyu fotoğrafla",
+  "deliveryRetakePhoto": "Başka bir fotoğraf çek",
+  "deliveryConfirm": "Teslimi onayla",
+  "deliveryDone": "Sipariş teslim edildi",
+  "deliveryPhotoTitle": "Teslim fotoğrafı",
+
+  "routeTitle": "Güzergâh",
+  "routeCourier": "Kurye",
+  "routeOpenInNavigator": "Navigasyonda aç",
+  "routeLaunchFailed": "Navigasyon uygulaması açılamadı",
 
   "logoutButton": "Çıkış yap",
 

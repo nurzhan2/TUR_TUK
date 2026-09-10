@@ -6,14 +6,17 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// не в SharedPreferences.
 class TokenStorage {
   TokenStorage({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   static const _accessKey = 'courier_access_token';
   static const _refreshKey = 'courier_refresh_token';
 
   final FlutterSecureStorage _storage;
 
-  Future<void> save({required String accessToken, required String refreshToken}) async {
+  Future<void> save({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
     await _storage.write(key: _accessKey, value: accessToken);
     await _storage.write(key: _refreshKey, value: refreshToken);
   }

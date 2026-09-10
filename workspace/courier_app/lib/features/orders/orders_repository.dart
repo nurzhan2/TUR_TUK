@@ -63,7 +63,7 @@ class DemoOrdersRepository implements OrdersRepository {
 /// курьера на свободный заказ бэкенд делает сам при принятии, отдельного
 /// «взять заказ» там нет.
 class ApiOrdersRepository implements OrdersRepository {
-  ApiOrdersRepository({required ApiClient apiClient}) : _apiClient = apiClient;
+  ApiOrdersRepository(this._apiClient);
 
   final ApiClient _apiClient;
 
@@ -87,8 +87,7 @@ class ApiOrdersRepository implements OrdersRepository {
     // локальный список мог устареть, а бэкенд отклоняет недопустимые
     // переходы (`_ALLOWED_TRANSITIONS`) — то есть угадывание тут стоило бы
     // 422 вместо шага вперёд.
-    final current =
-        await _apiClient.get('/orders/$id') as Map<String, dynamic>;
+    final current = await _apiClient.get('/orders/$id') as Map<String, dynamic>;
     final next = Order.fromJson(current).status.next;
     if (next == null) return Order.fromJson(current);
     return _setStatus(id, next);
@@ -108,12 +107,10 @@ class ApiOrdersRepository implements OrdersRepository {
       _setStatus(id, OrderStatus.delivered);
 
   Future<Order> _setStatus(int id, OrderStatus status) async {
-    final json =
-        await _apiClient.patch(
-              '/orders/$id/status',
-              body: {'status': status.name},
-            )
-            as Map<String, dynamic>;
+    final json = await _apiClient.patch(
+      '/orders/$id/status',
+      body: {'status': status.name},
+    ) as Map<String, dynamic>;
     return Order.fromJson(json);
   }
 }

@@ -9,7 +9,11 @@ enum AuthStatus { unknown, phoneEntry, codeEntry, authenticated }
 /// [status], чтобы решить, пускать ли на защищённые маршруты — см.
 /// `core/router/app_router.dart`).
 class AuthController extends ChangeNotifier {
-  AuthController({required AuthRepository repository}) : _repository = repository;
+  /// Позиционный приватный параметр, а не именованный: `prefer_initializing_formals`
+  /// требует инициализирующей формы `this._repository`, а именованным
+  /// параметрам приватное имя запрещено языком. Конструктор зовётся из одного
+  /// места (`app.dart`), так что читаемость от этого не страдает.
+  AuthController(this._repository);
 
   final AuthRepository _repository;
 

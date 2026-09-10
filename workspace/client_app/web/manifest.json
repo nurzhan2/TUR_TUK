@@ -1,13 +1,14 @@
 {
-    "name": "client_app",
-    "short_name": "client_app",
+    "name": "TUR TUK — доставка в отели Кемера",
+    "short_name": "TUR TUK",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#8B0000",
+    "description": "Доставка сувениров, косметики и продуктов на рецепцию вашего отеля в Кемере",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "lang": "ru",
     "icons": [
         {
             "src": "icons/Icon-192.png",

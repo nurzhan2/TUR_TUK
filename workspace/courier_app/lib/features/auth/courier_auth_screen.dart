@@ -56,7 +56,11 @@ class _CourierAuthScreenState extends State<CourierAuthScreen> {
               if (auth.status == AuthStatus.codeEntry)
                 _CodeStep(controller: _codeController, auth: auth, l10n: l10n)
               else
-                _PhoneStep(controller: _phoneController, auth: auth, l10n: l10n),
+                _PhoneStep(
+                  controller: _phoneController,
+                  auth: auth,
+                  l10n: l10n,
+                ),
               if (auth.errorMessage != null) ...[
                 const SizedBox(height: 16),
                 Text(
@@ -76,7 +80,11 @@ class _CourierAuthScreenState extends State<CourierAuthScreen> {
 }
 
 class _PhoneStep extends StatelessWidget {
-  const _PhoneStep({required this.controller, required this.auth, required this.l10n});
+  const _PhoneStep({
+    required this.controller,
+    required this.auth,
+    required this.l10n,
+  });
 
   final TextEditingController controller;
   final AuthController auth;
@@ -91,7 +99,10 @@ class _PhoneStep extends StatelessWidget {
           controller: controller,
           keyboardType: TextInputType.phone,
           enabled: !auth.isLoading,
-          decoration: InputDecoration(labelText: l10n.phoneLabel, hintText: l10n.phoneHint),
+          decoration: InputDecoration(
+            labelText: l10n.phoneLabel,
+            hintText: l10n.phoneHint,
+          ),
         ),
         const SizedBox(height: 24),
         ElevatedButton(
@@ -106,7 +117,10 @@ class _PhoneStep extends StatelessWidget {
               ? const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : Text(l10n.sendCodeButton),
         ),
@@ -116,7 +130,11 @@ class _PhoneStep extends StatelessWidget {
 }
 
 class _CodeStep extends StatelessWidget {
-  const _CodeStep({required this.controller, required this.auth, required this.l10n});
+  const _CodeStep({
+    required this.controller,
+    required this.auth,
+    required this.l10n,
+  });
 
   final TextEditingController controller;
   final AuthController auth;
@@ -127,13 +145,20 @@ class _CodeStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(auth.phone, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+        Text(
+          auth.phone,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           enabled: !auth.isLoading,
-          decoration: InputDecoration(labelText: l10n.codeLabel, hintText: l10n.codeHint),
+          decoration: InputDecoration(
+            labelText: l10n.codeLabel,
+            hintText: l10n.codeHint,
+          ),
         ),
         const SizedBox(height: 24),
         ElevatedButton(
@@ -148,7 +173,10 @@ class _CodeStep extends StatelessWidget {
               ? const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : Text(l10n.verifyCodeButton),
         ),

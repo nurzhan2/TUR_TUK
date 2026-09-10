@@ -184,16 +184,16 @@ abstract class AppLocalizations {
   /// **'Введите код из SMS'**
   String get authCodeRequired;
 
-  /// Заголовок главного экрана курьера — список новых заказов
+  /// Заголовок главного экрана курьера
   ///
   /// In ru, this message translates to:
-  /// **'Новые заказы'**
+  /// **'Заказы'**
   String get ordersTitle;
 
   /// No description provided for @ordersEmpty.
   ///
   /// In ru, this message translates to:
-  /// **'Пока нет новых заказов'**
+  /// **'Пока нет заказов'**
   String get ordersEmpty;
 
   /// No description provided for @ordersLoadError.
@@ -208,22 +208,112 @@ abstract class AppLocalizations {
   /// **'Повторить'**
   String get ordersRetryButton;
 
-  /// Номер заказа в списке
+  /// Номер заказа в списке и в заголовке карточки
   ///
   /// In ru, this message translates to:
   /// **'Заказ №{id}'**
   String orderNumber(int id);
 
+  /// Секция списка: заказы, которые ещё никто не взял
+  ///
+  /// In ru, this message translates to:
+  /// **'Новые'**
+  String get sectionNew;
+
+  /// No description provided for @sectionInProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'В работе'**
+  String get sectionInProgress;
+
+  /// No description provided for @sectionDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выполненные'**
+  String get sectionDone;
+
+  /// No description provided for @sectionEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Здесь пока пусто'**
+  String get sectionEmpty;
+
+  /// Отель и номер комнаты одной строкой
+  ///
+  /// In ru, this message translates to:
+  /// **'{hotel}, номер {room}'**
+  String orderAddress(String hotel, String room);
+
+  /// Сколько позиций в заказе
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, one{{count} позиция} few{{count} позиции} many{{count} позиций} other{{count} позиции}}'**
+  String orderItemsCount(int count);
+
+  /// No description provided for @orderNotFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заказ не найден'**
+  String get orderNotFound;
+
+  /// No description provided for @orderItemsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Состав заказа'**
+  String get orderItemsTitle;
+
+  /// No description provided for @orderItemsUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Состав заказа недоступен'**
+  String get orderItemsUnavailable;
+
+  /// No description provided for @orderClientTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Клиент'**
+  String get orderClientTitle;
+
+  /// No description provided for @orderCall.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позвонить'**
+  String get orderCall;
+
+  /// No description provided for @orderHotel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отель'**
+  String get orderHotel;
+
+  /// No description provided for @orderRoom.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер комнаты'**
+  String get orderRoom;
+
+  /// No description provided for @orderTotal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма заказа'**
+  String get orderTotal;
+
+  /// Время оформления заказа
+  ///
+  /// In ru, this message translates to:
+  /// **'Оформлен в {time}'**
+  String orderCreatedAt(String time);
+
   /// No description provided for @orderStatusCreated.
   ///
   /// In ru, this message translates to:
-  /// **'принят'**
+  /// **'новый'**
   String get orderStatusCreated;
 
   /// No description provided for @orderStatusAccepted.
   ///
   /// In ru, this message translates to:
-  /// **'принят курьером'**
+  /// **'принят'**
   String get orderStatusAccepted;
 
   /// No description provided for @orderStatusAssembling.
@@ -235,7 +325,7 @@ abstract class AppLocalizations {
   /// No description provided for @orderStatusDelivering.
   ///
   /// In ru, this message translates to:
-  /// **'доставляется'**
+  /// **'в пути'**
   String get orderStatusDelivering;
 
   /// No description provided for @orderStatusDelivered.
@@ -249,6 +339,126 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'отменён'**
   String get orderStatusCancelled;
+
+  /// No description provided for @actionAccept.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять'**
+  String get actionAccept;
+
+  /// No description provided for @actionReject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонить'**
+  String get actionReject;
+
+  /// No description provided for @actionStartAssembly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать сборку'**
+  String get actionStartAssembly;
+
+  /// No description provided for @actionDepart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выехал'**
+  String get actionDepart;
+
+  /// No description provided for @actionDelivered.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доставлен'**
+  String get actionDelivered;
+
+  /// No description provided for @actionRoute.
+  ///
+  /// In ru, this message translates to:
+  /// **'Маршрут'**
+  String get actionRoute;
+
+  /// No description provided for @actionCancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get actionCancel;
+
+  /// No description provided for @rejectConfirmTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отклонить заказ?'**
+  String get rejectConfirmTitle;
+
+  /// No description provided for @rejectConfirmText.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заказ вернётся диспетчеру. Отменить это действие из приложения нельзя.'**
+  String get rejectConfirmText;
+
+  /// No description provided for @deliveryTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтверждение доставки'**
+  String get deliveryTitle;
+
+  /// No description provided for @deliveryHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Снимите коробку на рецепции — снимок подтверждает доставку.'**
+  String get deliveryHint;
+
+  /// No description provided for @deliveryTakePhoto.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сфотографировать коробку'**
+  String get deliveryTakePhoto;
+
+  /// No description provided for @deliveryRetakePhoto.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделать другой снимок'**
+  String get deliveryRetakePhoto;
+
+  /// No description provided for @deliveryConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подтвердить доставку'**
+  String get deliveryConfirm;
+
+  /// No description provided for @deliveryDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заказ доставлен'**
+  String get deliveryDone;
+
+  /// No description provided for @deliveryPhotoTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фото доставки'**
+  String get deliveryPhotoTitle;
+
+  /// No description provided for @routeTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Маршрут'**
+  String get routeTitle;
+
+  /// No description provided for @routeCourier.
+  ///
+  /// In ru, this message translates to:
+  /// **'Курьер'**
+  String get routeCourier;
+
+  /// No description provided for @routeOpenInNavigator.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть в навигаторе'**
+  String get routeOpenInNavigator;
+
+  /// No description provided for @routeLaunchFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось открыть навигатор'**
+  String get routeLaunchFailed;
 
   /// No description provided for @logoutButton.
   ///

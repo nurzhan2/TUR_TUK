@@ -48,10 +48,7 @@ class DemoAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> verifyCode({
-    required String phone,
-    required String code,
-  }) async {
+  Future<void> verifyCode({required String phone, required String code}) async {
     await Future<void>.delayed(kDemoLatency);
     if (!RegExp(r'^\d{4}$').hasMatch(code.trim())) {
       // Тот же путь, что у боевой реализации: контроллер покажет ключ
@@ -85,11 +82,7 @@ class DemoAuthRepository implements AuthRepository {
 /// находит существующего пользователя и просто выдаёт ему токен. Это
 /// ограничение сегодняшнего бэкенда, не этого экрана: см. `docs/DECISIONS.md`.
 class ApiAuthRepository implements AuthRepository {
-  ApiAuthRepository({
-    required ApiClient apiClient,
-    required TokenStorage tokenStorage,
-  }) : _apiClient = apiClient,
-       _tokenStorage = tokenStorage;
+  ApiAuthRepository(this._apiClient, this._tokenStorage);
 
   final ApiClient _apiClient;
   final TokenStorage _tokenStorage;
@@ -104,17 +97,12 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> verifyCode({
-    required String phone,
-    required String code,
-  }) async {
-    final json =
-        await _apiClient.post(
-              '/auth/verify-code',
-              body: {'phone': phone, 'code': code},
-              withAuth: false,
-            )
-            as Map<String, dynamic>;
+  Future<void> verifyCode({required String phone, required String code}) async {
+    final json = await _apiClient.post(
+      '/auth/verify-code',
+      body: {'phone': phone, 'code': code},
+      withAuth: false,
+    ) as Map<String, dynamic>;
 
     final tokens = AuthTokens.fromJson(json);
     await _tokenStorage.save(

@@ -51,8 +51,16 @@ class DemoData {
         clientName: 'Ольга Величко',
         clientPhone: '+7 916 442-18-05',
         items: const [
-          OrderItem(name: 'Турецкий кофе Mehmet Efendi, 250 г', price: 420, quantity: 2),
-          OrderItem(name: 'Пахлава с грецким орехом, 500 г', price: 1150, quantity: 1),
+          OrderItem(
+            name: 'Турецкий кофе Mehmet Efendi, 250 г',
+            price: 420,
+            quantity: 2,
+          ),
+          OrderItem(
+            name: 'Пахлава с грецким орехом, 500 г',
+            price: 1150,
+            quantity: 1,
+          ),
           OrderItem(name: 'Гранатовый сок, 1 л', price: 390, quantity: 3),
         ],
       ),
@@ -65,7 +73,11 @@ class DemoData {
         clientName: 'Дмитрий Соколов',
         clientPhone: '+7 903 771-60-42',
         items: const [
-          OrderItem(name: 'Оливковое масло Komili, 1 л', price: 890, quantity: 1),
+          OrderItem(
+            name: 'Оливковое масло Komili, 1 л',
+            price: 890,
+            quantity: 1,
+          ),
           OrderItem(name: 'Набор лукума, 800 г', price: 1340, quantity: 2),
           OrderItem(name: 'Крем для рук с оливой', price: 260, quantity: 4),
           OrderItem(name: 'Полотенце пештемаль', price: 1480, quantity: 1),
@@ -83,8 +95,16 @@ class DemoData {
         clientPhone: '+7 999 123-45-67',
         courierId: courierId,
         items: const [
-          OrderItem(name: 'Розовое масло Isparta, 20 мл', price: 2100, quantity: 1),
-          OrderItem(name: 'Мыло с оливковым маслом, 3 шт', price: 540, quantity: 2),
+          OrderItem(
+            name: 'Розовое масло Isparta, 20 мл',
+            price: 2100,
+            quantity: 1,
+          ),
+          OrderItem(
+            name: 'Мыло с оливковым маслом, 3 шт',
+            price: 540,
+            quantity: 2,
+          ),
           OrderItem(name: 'Чай яблочный, 400 г', price: 310, quantity: 2),
         ],
       ),

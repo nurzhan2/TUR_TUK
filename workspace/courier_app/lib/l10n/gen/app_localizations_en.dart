@@ -34,7 +34,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifyCodeButton => 'Confirm';
 
   @override
-  String get resendCodeButton => 'Resend code';
+  String get resendCodeButton => 'Send the code again';
 
   @override
   String get changePhoneButton => 'Change number';
@@ -43,22 +43,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authGenericError => 'Sign in failed. Please try again.';
 
   @override
-  String get authInvalidCode => 'Invalid or expired code';
+  String get authInvalidCode => 'Wrong or expired code';
 
   @override
   String get authPhoneRequired => 'Enter your phone number';
 
   @override
-  String get authCodeRequired => 'Enter the SMS code';
+  String get authCodeRequired => 'Enter the code from SMS';
 
   @override
-  String get ordersTitle => 'New orders';
+  String get ordersTitle => 'Orders';
 
   @override
-  String get ordersEmpty => 'No new orders yet';
+  String get ordersEmpty => 'No orders yet';
 
   @override
-  String get ordersLoadError => 'Failed to load orders';
+  String get ordersLoadError => 'Could not load orders';
 
   @override
   String get ordersRetryButton => 'Retry';
@@ -69,16 +69,73 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get orderStatusCreated => 'created';
+  String get sectionNew => 'New';
+
+  @override
+  String get sectionInProgress => 'In progress';
+
+  @override
+  String get sectionDone => 'Completed';
+
+  @override
+  String get sectionEmpty => 'Nothing here yet';
+
+  @override
+  String orderAddress(String hotel, String room) {
+    return '$hotel, room $room';
+  }
+
+  @override
+  String orderItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '$count item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get orderNotFound => 'Order not found';
+
+  @override
+  String get orderItemsTitle => 'Items';
+
+  @override
+  String get orderItemsUnavailable => 'Item list is unavailable';
+
+  @override
+  String get orderClientTitle => 'Client';
+
+  @override
+  String get orderCall => 'Call';
+
+  @override
+  String get orderHotel => 'Hotel';
+
+  @override
+  String get orderRoom => 'Room number';
+
+  @override
+  String get orderTotal => 'Order total';
+
+  @override
+  String orderCreatedAt(String time) {
+    return 'Placed at $time';
+  }
+
+  @override
+  String get orderStatusCreated => 'new';
 
   @override
   String get orderStatusAccepted => 'accepted';
 
   @override
-  String get orderStatusAssembling => 'assembling';
+  String get orderStatusAssembling => 'packing';
 
   @override
-  String get orderStatusDelivering => 'delivering';
+  String get orderStatusDelivering => 'on the way';
 
   @override
   String get orderStatusDelivered => 'delivered';
@@ -87,7 +144,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderStatusCancelled => 'cancelled';
 
   @override
-  String get logoutButton => 'Log out';
+  String get actionAccept => 'Accept';
+
+  @override
+  String get actionReject => 'Decline';
+
+  @override
+  String get actionStartAssembly => 'Start packing';
+
+  @override
+  String get actionDepart => 'On my way';
+
+  @override
+  String get actionDelivered => 'Delivered';
+
+  @override
+  String get actionRoute => 'Route';
+
+  @override
+  String get actionCancel => 'Cancel';
+
+  @override
+  String get rejectConfirmTitle => 'Decline the order?';
+
+  @override
+  String get rejectConfirmText =>
+      'The order goes back to the dispatcher. This cannot be undone from the app.';
+
+  @override
+  String get deliveryTitle => 'Delivery confirmation';
+
+  @override
+  String get deliveryHint =>
+      'Take a photo of the box at the reception desk — it confirms the delivery.';
+
+  @override
+  String get deliveryTakePhoto => 'Photograph the box';
+
+  @override
+  String get deliveryRetakePhoto => 'Take another photo';
+
+  @override
+  String get deliveryConfirm => 'Confirm delivery';
+
+  @override
+  String get deliveryDone => 'Order delivered';
+
+  @override
+  String get deliveryPhotoTitle => 'Delivery photo';
+
+  @override
+  String get routeTitle => 'Route';
+
+  @override
+  String get routeCourier => 'Courier';
+
+  @override
+  String get routeOpenInNavigator => 'Open in navigation app';
+
+  @override
+  String get routeLaunchFailed => 'Could not open the navigation app';
+
+  @override
+  String get logoutButton => 'Sign out';
 
   @override
   String get languageRu => 'Русский';

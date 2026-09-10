@@ -29,18 +29,15 @@ class Di {
 
   static AuthRepository get auth => _auth ??= kDemoMode
       ? const DemoAuthRepository()
-      : ApiAuthRepository(apiClient: api, tokenStorage: tokens);
+      : ApiAuthRepository(api, tokens);
 
   static OrdersRepository get orders => _orders ??= kDemoMode
       ? const DemoOrdersRepository()
-      : ApiOrdersRepository(apiClient: api);
+      : ApiOrdersRepository(api);
 
   /// Подмена реализаций — для тестов. Публичный вход вместо присваивания
   /// полям: поля приватные, а через один метод видно, кто и что подменил.
-  static void override({
-    AuthRepository? auth,
-    OrdersRepository? orders,
-  }) {
+  static void override({AuthRepository? auth, OrdersRepository? orders}) {
     if (auth != null) _auth = auth;
     if (orders != null) _orders = orders;
   }

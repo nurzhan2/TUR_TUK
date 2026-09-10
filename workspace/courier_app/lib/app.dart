@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'core/network/api_client.dart';
+import 'core/di.dart';
 import 'core/router/app_router.dart';
-import 'core/storage/token_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_controller.dart';
-import 'features/auth/auth_repository.dart';
 import 'features/orders/orders_controller.dart';
-import 'features/orders/orders_repository.dart';
 import 'l10n/gen/app_localizations.dart';
 
-/// Корневой виджет: собирает зависимости (сеть -> репозитории -> контроллеры)
-/// и отдаёт их через `provider` вниз по дереву, чтобы экраны не строили их
-/// сами и не расходились в конфигурации (один `ApiClient` на всё приложение —
-/// иначе токен, выставленный при логине, не попал бы в запросы заказов).
+/// Корневой виджет.
+///
+/// Репозитории берутся у [Di] — единственного места, где решается «демо или
+/// бэкенд». Раньше они собирались здесь цепочкой `ProxyProvider`, и это
+/// работало, пока реализация была одна; с появлением демо-режима развилка
+/// в дереве провайдеров означала бы `if (kDemoMode)` посреди `build`.
 class CourierApp extends StatelessWidget {
   const CourierApp({super.key});
 
@@ -23,24 +22,10 @@ class CourierApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<ApiClient>(create: (_) => ApiClient(), dispose: (_, client) => client.close()),
-        Provider<TokenStorage>(create: (_) => TokenStorage()),
-        ProxyProvider2<ApiClient, TokenStorage, AuthRepository>(
-          update: (_, apiClient, tokenStorage, __) =>
-              AuthRepository(apiClient: apiClient, tokenStorage: tokenStorage),
+        ChangeNotifierProvider(
+          create: (_) => AuthController(Di.auth)..restoreSession(),
         ),
-        ProxyProvider<ApiClient, OrdersRepository>(
-          update: (_, apiClient, __) => OrdersRepository(apiClient: apiClient),
-        ),
-        ChangeNotifierProxyProvider<AuthRepository, AuthController>(
-          create: (context) =>
-              AuthController(repository: context.read<AuthRepository>())..restoreSession(),
-          update: (_, repository, previous) => previous!,
-        ),
-        ChangeNotifierProxyProvider<OrdersRepository, OrdersController>(
-          create: (context) => OrdersController(repository: context.read<OrdersRepository>()),
-          update: (_, repository, previous) => previous!,
-        ),
+        ChangeNotifierProvider(create: (_) => OrdersController(Di.orders)),
       ],
       child: const _RouterHost(),
     );
@@ -64,6 +49,7 @@ class _RouterHostState extends State<_RouterHost> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       routerConfig: _router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

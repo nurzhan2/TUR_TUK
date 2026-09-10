@@ -13,8 +13,8 @@ __pycache__/
 **/.idea/
 **/.pytest_cache/
 
-# Сборки демо
-deploy/dist/
+# Сборки демо (правило без слэша в начале — иначе не ловит workspace/deploy/dist)
+**/deploy/dist/
 
 # Прочее
 *.log

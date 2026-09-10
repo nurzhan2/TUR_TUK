@@ -54,8 +54,10 @@ class DemoState {
   /// Принять заказ: он назначается курьеру показа и переходит в `accepted`.
   Order accept(int id) => _replace(
     id,
-    (order) =>
-        order.copyWith(status: OrderStatus.accepted, courierId: DemoData.courierId),
+    (order) => order.copyWith(
+      status: OrderStatus.accepted,
+      courierId: DemoData.courierId,
+    ),
   );
 
   /// Отклонить заказ. Уходит в `cancelled`, а не исчезает из списка: заказ,
@@ -74,8 +76,10 @@ class DemoState {
     if (next == OrderStatus.delivering) {
       return order.copyWith(
         status: next,
-        courierLat: order.courierLat + (order.hotelLat - order.courierLat) * 0.4,
-        courierLng: order.courierLng + (order.hotelLng - order.courierLng) * 0.4,
+        courierLat:
+            order.courierLat + (order.hotelLat - order.courierLat) * 0.4,
+        courierLng:
+            order.courierLng + (order.hotelLng - order.courierLng) * 0.4,
       );
     }
     return order.copyWith(status: next);
