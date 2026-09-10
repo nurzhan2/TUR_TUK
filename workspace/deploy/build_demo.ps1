@@ -1,4 +1,4 @@
-# Сборка демо TUR TUK: два веб-приложения + страница-развилка.
+﻿# Сборка демо TUR TUK: два веб-приложения + страница-развилка.
 #
 # Запуск из любой папки:
 #   powershell -ExecutionPolicy Bypass -File workspace\deploy\build_demo.ps1
