@@ -54,6 +54,23 @@ class _RouterHostState extends State<_RouterHost> {
       routerConfig: _router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      // То же ограничение, что в клиентском приложении: экраны свёрстаны под
+      // телефон, а демо открывают и с ноутбука. Без этого список заказов
+      // растягивается на весь монитор и выглядит сломанным.
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        if (MediaQuery.sizeOf(context).width <= _phoneWidth) return child;
+
+        return ColoredBox(
+          color: const Color(0xFFE9E9EC),
+          child: Center(
+            child: SizedBox(width: _phoneWidth, child: ClipRect(child: child)),
+          ),
+        );
+      },
     );
   }
 }
+
+/// Ширина телефона, по которой свёрстаны экраны.
+const double _phoneWidth = 430;

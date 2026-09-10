@@ -57,6 +57,29 @@ class _App extends StatelessWidget {
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      // Приложение мобильное, а демо смотрят и с ноутбука. Без ограничения
+      // ширины витрина на широком экране разъезжается: две карточки товара
+      // растягиваются на весь монитор и выглядят сломанными. Держим колонку
+      // шириной с телефон по центру серого полотна — так демо читается
+      // одинаково и на айфоне заказчицы, и в браузере на большом экране.
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        final width = MediaQuery.sizeOf(context).width;
+        if (width <= _phoneWidth) return child;
+
+        return ColoredBox(
+          color: const Color(0xFFE9E9EC),
+          child: Center(
+            child: SizedBox(
+              width: _phoneWidth,
+              child: ClipRect(child: child),
+            ),
+          ),
+        );
+      },
     );
   }
 }
+
+/// Ширина телефона, по которой свёрстаны все экраны.
+const double _phoneWidth = 430;
