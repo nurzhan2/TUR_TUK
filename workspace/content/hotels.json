@@ -1,0 +1,70 @@
+{
+  "_комментарий": "Отели, куда возит TUR TUK. Список показывается при регистрации и на оформлении заказа, координаты нужны для карты курьера. Адреса и координаты проставлены приблизительно по Кемеру — заказчица должна подтвердить перечень и уточнить точки.",
+
+  "hotels": [
+    {
+      "id": 1,
+      "name": "Rixos Sungate",
+      "address": "Çıralı Sk. No:1, Beldibi, Kemer, Antalya",
+      "lat": 36.5573,
+      "lng": 30.5495,
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "Club Med Palmiye",
+      "address": "Kemer Yolu, Kemer, Antalya",
+      "lat": 36.6156,
+      "lng": 30.5602,
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "Maxx Royal Kemer",
+      "address": "Göynük, Kemer, Antalya",
+      "lat": 36.6478,
+      "lng": 30.5361,
+      "active": true
+    },
+    {
+      "id": 4,
+      "name": "Amara Prestige",
+      "address": "Merkez Mah., Kemer, Antalya",
+      "lat": 36.6021,
+      "lng": 30.5589,
+      "active": true
+    },
+    {
+      "id": 5,
+      "name": "Crystal Sunset Luxury",
+      "address": "Kiriş Mah., Kemer, Antalya",
+      "lat": 36.5894,
+      "lng": 30.5722,
+      "active": true
+    },
+    {
+      "id": 6,
+      "name": "Orange County Kemer",
+      "address": "Atatürk Blv., Kemer, Antalya",
+      "lat": 36.5983,
+      "lng": 30.5641,
+      "active": true
+    },
+    {
+      "id": 7,
+      "name": "Akra Kemer",
+      "address": "Kiriş Mah., Kemer, Antalya",
+      "lat": 36.5831,
+      "lng": 30.5768,
+      "active": true
+    },
+    {
+      "id": 8,
+      "name": "Sherwood Exclusive Kemer",
+      "address": "Kiriş Mah., Kemer, Antalya",
+      "lat": 36.5856,
+      "lng": 30.5749,
+      "active": true
+    }
+  ]
+}

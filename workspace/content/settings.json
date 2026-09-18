@@ -1,0 +1,63 @@
+{
+  "_комментарий": "Настройки сервиса TUR TUK. Правится руками, приложение читает это при запуске. После правки — python workspace/tools/apply_content.py и пересборка.",
+
+  "brand": {
+    "name": "TUR TUK",
+    "tagline": "Доставка в отели Кемера",
+    "deliveryPromise": "Доставка в отель за 60 минут",
+    "accentColor": "#8B0000",
+    "logoFile": "",
+    "_logoFile": "Положить SVG/PNG логотипа в content/photos/ и указать имя файла. Пока пусто — рисуется текстовый знак TT."
+  },
+
+  "delivery": {
+    "minOrderTotal": 3000,
+    "deliveryFee": 300,
+    "freeDeliveryFrom": 5000,
+    "etaMinutes": 60,
+    "currency": "RUB",
+    "currencySymbol": "₽",
+    "_комментарий": "Цифры взяты из переписки с заказчицей, но прямо ею не подтверждены — уточнить перед запуском."
+  },
+
+  "payment": {
+    "cardEnabled": true,
+    "sbpEnabled": true,
+    "cashEnabled": false,
+    "_комментарий": "Наличные заказчица исключила из ТЗ."
+  },
+
+  "warehouse": {
+    "name": "Склад TUR TUK, Кемер",
+    "address": "Кемер, Анталья, Турция",
+    "lat": 36.6021,
+    "lng": 30.5619,
+    "_комментарий": "Точка, откуда стартует курьер на карте отслеживания."
+  },
+
+  "contacts": {
+    "phone": "",
+    "whatsapp": "",
+    "telegram": "",
+    "email": "",
+    "supportHours": "09:00 – 22:00",
+    "privacyPolicyUrl": "",
+    "supportUrl": "",
+    "_комментарий": "privacyPolicyUrl и supportUrl обязательны для App Store и Google Play."
+  },
+
+  "languages": ["ru", "en", "tr"],
+
+  "promoCodes": [
+    { "code": "KEMER10", "type": "percent", "value": 10, "active": true, "title": "Скидка 10% на первый заказ" },
+    { "code": "TURTUK500", "type": "fixed", "value": 500, "active": true, "title": "500 ₽ скидки" },
+    { "code": "SUMMER", "type": "percent", "value": 15, "active": true, "title": "Летняя скидка 15%" },
+    { "code": "EXPIRED", "type": "percent", "value": 10, "active": false, "title": "Просроченный — для проверки ошибки" }
+  ],
+
+  "banners": [
+    { "title": "Скидка 10% по промокоду KEMER10", "subtitle": "на первый заказ в приложении" },
+    { "title": "Бесплатная доставка от 5000 ₽", "subtitle": "до рецепции вашего отеля" },
+    { "title": "Турецкие сладости", "subtitle": "лукум и пахлава — привезём за час" }
+  ]
+}

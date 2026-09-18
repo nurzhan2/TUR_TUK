@@ -43,4 +43,8 @@ flutter:
   uses-material-design: true
 
   assets:
+    # Контент от заказчицы: каталог, отели, настройки и фотографии товаров.
+    # Складывается сюда скриптом tools/apply_content.py из workspace/content.
+    - assets/content/
+    - assets/content/photos/
     - assets/demo/

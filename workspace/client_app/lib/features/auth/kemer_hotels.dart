@@ -1,31 +1,21 @@
-/// Отели Кемера, куда TUR TUK возит заказы.
+import '../../core/content/app_content.dart';
+
+/// Отели, куда TUR TUK возит заказы.
 ///
-/// Список лежит в фичах, а не в общем слое данных: он ещё не согласован с
-/// заказчицей (в брифе отели названы примерами, финального перечня нет),
-/// и когда он приедет — правится одно место без похода в модели.
-///
-/// Сессия чекаута держит свою копию такого же списка. Дублирование здесь
-/// осознанное: связывать две параллельные ветки общим файлом дороже, чем
-/// продублировать восемь строк, а свести их в один источник — работа на
-/// пять минут после мержа.
-const List<String> kemerHotels = [
-  'Rixos Sungate',
-  'Club Med Palmiye',
-  'Maxx Royal Kemer',
-  'Amara Prestige',
-  'Crystal Sunset Luxury',
-  'Orange County Kemer',
-  'Akra Kemer',
-  'Sherwood Exclusive Kemer',
-];
+/// Список больше не зашит в код: он лежит в `workspace/content/hotels.json`
+/// вместе с адресами и координатами, которые нужны карте курьера. Заказчица
+/// присылает свой перечень — мы правим один файл и пересобираем.
+List<String> get kemerHotels =>
+    [for (final hotel in AppContent.instance.hotels) hotel.name];
 
 /// Отель профиля, если он есть в списке, иначе первый.
 ///
 /// Гостья могла заселиться в отель, которого в перечне пока нет — тогда
 /// подставлять «пусто» нельзя, форма встанет с невалидным значением.
 String resolveHotel(String? profileHotel) {
-  if (profileHotel != null && kemerHotels.contains(profileHotel)) {
+  final hotels = kemerHotels;
+  if (profileHotel != null && hotels.contains(profileHotel)) {
     return profileHotel;
   }
-  return kemerHotels.first;
+  return hotels.first;
 }

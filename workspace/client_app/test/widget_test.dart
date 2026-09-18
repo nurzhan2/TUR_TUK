@@ -9,8 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:client_app/app.dart';
+import 'content_setup.dart';
+
 
 void main() {
+  setUpAll(loadTestContent);
+
   testWidgets('splash уводит в каталог', (WidgetTester tester) async {
     await tester.pumpWidget(const ClientApp());
 

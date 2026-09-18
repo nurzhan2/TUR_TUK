@@ -261,27 +261,35 @@ class _PriceRow extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            money(product.price),
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: size,
-              height: 1.1,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+          // Flexible на обоих ценниках: FittedBox сжимает строку целиком, но
+          // сначала Row обязан уложиться в отведённую ширину. Без этого пара
+          // «четырёхзначная цена + зачёркнутая старая» вылезает за карточку
+          // на узком экране.
+          Flexible(
+            child: Text(
+              money(product.price),
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: size,
+                height: 1.1,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           if (product.hasDiscount) ...[
             const SizedBox(width: 6),
-            Text(
-              money(product.oldPrice!),
-              maxLines: 1,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.1,
-                color: AppColors.textMuted,
-                decoration: TextDecoration.lineThrough,
-                decorationColor: AppColors.textMuted,
+            Flexible(
+              child: Text(
+                money(product.oldPrice!),
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.1,
+                  color: AppColors.textMuted,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: AppColors.textMuted,
+                ),
               ),
             ),
           ],

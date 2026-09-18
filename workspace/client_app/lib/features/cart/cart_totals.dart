@@ -1,3 +1,5 @@
+import '../../core/content/app_content.dart';
+
 /// Арифметика воронки покупки: корзина и чекаут считают итог ОДНИМ кодом.
 ///
 /// Заказчица проходит воронку насквозь и сверяет цифры на каждом шаге, а
@@ -7,13 +9,13 @@
 class CartTotals {
   const CartTotals({required this.subtotal, this.discount = 0});
 
-  /// Пороги демо (`docs/prompts/_common.md`): минимальный заказ 3000 ₽,
-  /// доставка 300 ₽, бесплатно от 5000 ₽. Константы продублированы здесь,
-  /// а не взяты из `core/demo/demo_data.dart`, намеренно: выше уровня `Di`
-  /// экраны о существовании демо-режима не знают.
-  static const double minOrder = 3000;
-  static const double deliveryFee = 300;
-  static const double freeDeliveryFrom = 5000;
+  /// Пороги приходят из настроек (`content/settings.json`): их правит
+  /// заказчица, а не разработчик. Экраны при этом по-прежнему ничего не знают
+  /// о демо-режиме — контент и режим работы это разные вещи.
+  static double get minOrder => AppContent.instance.delivery.minOrderTotal;
+  static double get deliveryFee => AppContent.instance.delivery.deliveryFee;
+  static double get freeDeliveryFrom =>
+      AppContent.instance.delivery.freeDeliveryFrom;
 
   /// Сумма товаров без доставки и скидки.
   final double subtotal;

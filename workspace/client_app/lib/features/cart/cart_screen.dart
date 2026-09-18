@@ -225,18 +225,29 @@ class _CartRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Text(
-                        money(item.product.price),
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      // Flexible на обеих цифрах: на узком экране пара
+                      // «цена за штуку + сумма по строке» с четырёхзначными
+                      // ценниками не влезает в колонку рядом со степпером.
+                      Flexible(
+                        child: Text(
+                          money(item.product.price),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                       ),
                       // Сумма по строке нужна, только когда она отличается
                       // от цены за штуку.
                       if (item.quantity > 1) ...[
                         const SizedBox(width: 8),
-                        Text(
-                          money(item.lineTotal),
-                          style: theme.textTheme.bodySmall,
+                        Flexible(
+                          child: Text(
+                            money(item.lineTotal),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
                         ),
                       ],
                     ],

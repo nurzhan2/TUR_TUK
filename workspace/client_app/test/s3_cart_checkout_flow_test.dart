@@ -20,6 +20,7 @@ import 'package:client_app/features/cart/cart_screen.dart';
 import 'package:client_app/features/catalog/catalog_screen.dart';
 import 'package:client_app/features/checkout/checkout_screen.dart';
 import 'package:client_app/features/checkout/order_success_screen.dart';
+import 'content_setup.dart';
 
 Future<void> settle(WidgetTester tester, [int frames = 12]) async {
   for (var i = 0; i < frames; i++) {
@@ -44,7 +45,10 @@ Future<CartController> openCart(WidgetTester tester) async {
   );
 }
 
+
 void main() {
+  setUpAll(loadTestContent);
+
   testWidgets('минималка, промокод, оплата, экран успеха', (tester) async {
     final cart = await openCart(tester);
     expect(find.text('Перейти в каталог'), findsOneWidget,
