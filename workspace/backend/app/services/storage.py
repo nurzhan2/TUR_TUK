@@ -29,7 +29,30 @@ ALLOWED_CONTENT_TYPES: dict[str, str] = {
 }
 
 MAX_SIDE = 1600
+# Превью для карточек каталога, корзины, заказов: квадрат ~160 pt на экране
+# при плотности 3x — это ~480 px. Лежит рядом с оригиналом:
+# `<имя>.webp` → `<имя>.thumb.webp`; приложение подставляет его само.
+THUMB_SIDE = 480
+THUMB_SUFFIX = ".thumb.webp"
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+
+
+def thumb_key(key: str) -> str:
+    return key[: -len(".webp")] + THUMB_SUFFIX if key.endswith(".webp") else key
+
+
+def make_thumb(webp_bytes: bytes) -> bytes:
+    """Короткая сторона — THUMB_SIDE: карточки показывают фото в квадрате с
+    BoxFit.cover, и горизонтальное фото, ужатое по длинной стороне, в
+    квадрате растянулось бы и поплыло."""
+    image = Image.open(io.BytesIO(webp_bytes))
+    w, h = image.size
+    scale = THUMB_SIDE / min(w, h)
+    if scale < 1:
+        image = image.resize((max(1, round(w * scale)), max(1, round(h * scale))), Image.LANCZOS)
+    out = io.BytesIO()
+    image.save(out, format="WEBP", quality=78, method=4)
+    return out.getvalue()
 
 
 def validate_image_type(file: UploadFile) -> None:
@@ -109,8 +132,17 @@ async def store_image(file: UploadFile, *parts: str, keep_alpha: bool = False) -
         )
     body, content_type = process_image(raw, keep_alpha=keep_alpha)
     key = "/".join([*parts, f"{uuid4().hex}.webp"])
+    return await store_webp(body, key)
+
+
+async def store_webp(body: bytes, key: str) -> str:
+    """Сохранить готовый WebP и его превью; вернуть URL оригинала."""
+    thumb = make_thumb(body)
     if _s3_configured():
-        return await _put_s3(body, content_type, get_settings().s3_bucket, key)
+        bucket = get_settings().s3_bucket
+        await _put_s3(thumb, "image/webp", bucket, thumb_key(key))
+        return await _put_s3(body, "image/webp", bucket, key)
+    _put_local(thumb, thumb_key(key))
     return _put_local(body, key)
 
 

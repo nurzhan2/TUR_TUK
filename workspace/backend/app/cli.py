@@ -30,8 +30,7 @@ from app.models.promo_code import PromoCode
 from app.models.role import Role, RoleCode
 from app.models.user import User
 from app.services.app_settings import save_settings
-from app.services.storage import _put_local, _put_s3, _s3_configured, process_image
-from app.core.config import get_settings
+from app.services.storage import THUMB_SUFFIX, make_thumb, process_image, store_webp
 from app.web.admin import normalize_phone
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -60,11 +59,24 @@ async def create_owner(phone: str, password: str, name: str | None) -> None:
 async def _store_photo(path: Path, *parts: str) -> str | None:
     if not path.is_file():
         return None
-    body, content_type = process_image(path.read_bytes())
+    body, _ = process_image(path.read_bytes())
     key = "/".join([*parts, f"{path.stem}.webp"])
-    if _s3_configured():
-        return await _put_s3(body, content_type, get_settings().s3_bucket, key)
-    return _put_local(body, key)
+    return await store_webp(body, key)
+
+
+def make_thumbs(media_dir: Path) -> None:
+    """Превью для уже лежащих в локальном хранилище фото (загруженных до
+    появления превью). Повторный запуск пропускает готовые."""
+    made = 0
+    for original in media_dir.rglob("*.webp"):
+        if original.name.endswith(THUMB_SUFFIX):
+            continue
+        thumb = original.with_name(original.name[: -len(".webp")] + THUMB_SUFFIX)
+        if thumb.exists():
+            continue
+        thumb.write_bytes(make_thumb(original.read_bytes()))
+        made += 1
+    print(f"превью создано: {made}")
 
 
 async def seed_content(content_dir: Path, photos_dir: Path) -> None:
@@ -167,9 +179,15 @@ def main() -> None:
     seed.add_argument("--content", type=Path, default=WORKSPACE / "content")
     seed.add_argument("--photos", type=Path, default=WORKSPACE / "client_app" / "assets" / "content" / "photos")
 
+    sub.add_parser("make-thumbs", help="создать превью для уже загруженных фото (локальное хранилище)")
+
     args = parser.parse_args()
     if args.command == "create-owner":
         asyncio.run(create_owner(args.phone, args.password, args.name))
+    elif args.command == "make-thumbs":
+        from app.core.config import get_settings
+
+        make_thumbs(Path(get_settings().media_dir))
     else:
         asyncio.run(seed_content(args.content, args.photos))
 

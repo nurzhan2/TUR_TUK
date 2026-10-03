@@ -194,9 +194,10 @@ async def test_admin_upload_product_photo_sets_url(client: AsyncClient, fake_s3)
     assert resp.status_code == 200
     body = resp.json()
     assert body["photo_url"]
-    assert len(fake_s3.put_calls) == 1
-    # Любой входной формат хранится пережатым в WebP.
-    assert fake_s3.put_calls[0]["ContentType"] == "image/webp"
+    # Оригинал и превью для карточек (*.thumb.webp), оба в WebP.
+    assert len(fake_s3.put_calls) == 2
+    assert {c["ContentType"] for c in fake_s3.put_calls} == {"image/webp"}
+    assert any(c["Key"].endswith(".thumb.webp") for c in fake_s3.put_calls)
 
 
 async def test_admin_upload_product_photo_rejects_bad_mime(client: AsyncClient, fake_s3):
@@ -257,8 +258,8 @@ async def test_courier_upload_delivery_photo_sets_url(client: AsyncClient, fake_
     assert resp.status_code == 200
     body = resp.json()
     assert body["delivery_photo_url"]
-    assert len(fake_s3.put_calls) == 1
-    assert fake_s3.put_calls[0]["ContentType"] == "image/webp"
+    assert len(fake_s3.put_calls) == 2  # оригинал + превью
+    assert {c["ContentType"] for c in fake_s3.put_calls} == {"image/webp"}
 
 
 async def test_courier_upload_delivery_photo_rejects_bad_mime(client: AsyncClient, fake_s3):

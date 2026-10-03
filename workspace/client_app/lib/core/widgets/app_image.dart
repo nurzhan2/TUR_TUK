@@ -36,6 +36,14 @@ class AppImage extends StatelessWidget {
   static bool isNetwork(String source) =>
       source.startsWith('http://') || source.startsWith('https://');
 
+  /// Сервер кладёт рядом с каждым фото превью ~480 px: `x.webp` → `x.thumb.webp`.
+  static const _thumbMaxPx = 520.0;
+
+  static String? thumbFor(String source) {
+    if (!source.endsWith('.webp') || source.endsWith('.thumb.webp')) return null;
+    return '${source.substring(0, source.length - 5)}.thumb.webp';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (source.isEmpty) {
@@ -53,16 +61,39 @@ class AppImage extends StatelessWidget {
         cacheWidth: cacheWidth,
       );
     }
+    // Карточка каталога ~160 pt: тянуть и декодировать оригинал 1600 px
+    // ради неё — лишний трафик гостю в роуминге и заметные подвисания
+    // в web-сборке. Под небольшое место берём превью, при ошибке — оригинал.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final dpr = MediaQuery.devicePixelRatioOf(context);
+        final logical = constraints.hasBoundedWidth ? constraints.maxWidth : (width ?? double.infinity);
+        final px = logical * dpr;
+        final thumb = px.isFinite && px <= _thumbMaxPx ? thumbFor(source) : null;
+        // cacheWidth автоматически не ставим: при BoxFit.cover горизонтальное
+        // фото, ужатое по ширине, растянулось бы в квадрате и поплыло.
+        final decodeWidth = cacheWidth;
+        if (thumb == null) return _network(source, decodeWidth, errorBuilder);
+        return _network(
+          thumb,
+          decodeWidth,
+          (context, error, stack) => _network(source, decodeWidth, errorBuilder),
+        );
+      },
+    );
+  }
+
+  Widget _network(String url, int? decodeWidth, ImageErrorWidgetBuilder? onError) {
     return Image.network(
-      source,
+      url,
       fit: fit,
       width: width,
       height: height,
       alignment: alignment,
       semanticLabel: semanticLabel,
-      cacheWidth: cacheWidth,
+      cacheWidth: decodeWidth,
       gaplessPlayback: true,
-      errorBuilder: errorBuilder ?? (_, _, _) => const _Placeholder(),
+      errorBuilder: onError ?? (_, _, _) => const _Placeholder(),
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
         if (wasSynchronouslyLoaded) return child;
         return AnimatedSwitcher(
