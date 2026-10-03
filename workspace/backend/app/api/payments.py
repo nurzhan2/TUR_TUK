@@ -3,9 +3,8 @@
 
 `POST /payments/create` создаёт платёж в ЮKassa и возвращает
 `confirmation_url`, куда мобильное приложение редиректит клиента — сама
-ЮKassa показывает там выбор карта/СБП по настройкам магазина; наш код
-способ оплаты не выбирает и не умеет предложить оплату наличными (см.
-`app/core/yookassa.py` и `app/models/payment.py`).
+ЮKassa сразу открывает способ, выбранный гостем в приложении (карта/СБП,
+`order.payment_method`); наличных нет (см. `app/core/yookassa.py`).
 
 `POST /payments/webhook` — публичный эндпоинт без авторизации (ЮKassa шлёт
 его без заголовков нашей аутентификации), поэтому статусу из тела запроса
@@ -13,15 +12,17 @@
 перезапрашивается через `GET /payments/{id}` с нашим секретом.
 """
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user
 from app.core.config import get_settings
 from app.core.yookassa import YookassaClient, YookassaError, get_yookassa_client
 from app.db.session import get_session
-from app.models.order import Order, OrderPaymentStatus
+from app.models.order import Order, OrderPaymentStatus, OrderStatus
 from app.models.payment import Payment, PaymentMethod, PaymentStatus
 from app.models.user import User
 from app.schemas.payment import PaymentCreateRequest, PaymentCreateResponse, PaymentWebhookRequest
@@ -73,6 +74,31 @@ async def create_payment(
         )
     if order.payment_status == OrderPaymentStatus.PAID:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="заказ уже оплачен")
+    if order.status == OrderStatus.CANCELLED:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="заказ отменён")
+
+    # Гость нажал «Оплатить» дважды или вернулся со страницы оплаты, не
+    # заплатив: свежий неоплаченный платёж отдаём снова, а не плодим второй
+    # (иначе можно дважды списать деньги за один заказ).
+    fresh_since = datetime.now(timezone.utc) - timedelta(minutes=30)
+    existing = (
+        await session.execute(
+            select(Payment)
+            .where(
+                Payment.order_id == order.id,
+                Payment.status == PaymentStatus.PENDING,
+                Payment.created_at >= fresh_since,
+            )
+            .order_by(Payment.id.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if existing is not None and float(existing.amount) == float(order.total):
+        return existing
+
+    attempts = (
+        await session.execute(select(func.count(Payment.id)).where(Payment.order_id == order.id))
+    ).scalar_one()
 
     settings = get_settings()
     try:
@@ -82,6 +108,10 @@ async def create_payment(
             description=f"Заказ №{order.id}",
             return_url=settings.yookassa_return_url,
             order_id=order.id,
+            payment_method=order.payment_method,
+            # Стабильный ключ попытки: сетевой ретрай того же запроса вернёт
+            # тот же платёж, а не создаст второй.
+            idempotence_key=f"turtuk-order-{order.id}-attempt-{attempts + 1}",
         )
     except YookassaError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc

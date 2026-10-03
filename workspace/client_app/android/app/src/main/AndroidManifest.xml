@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Без этого релизная сборка не ходит в сеть: во Flutter INTERNET
+         есть только в debug-манифесте. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Push о статусе заказа (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="client_app"
+        android:label="TUR TUK"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

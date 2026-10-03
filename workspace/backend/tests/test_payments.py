@@ -45,7 +45,12 @@ class FakeYookassaClient(YookassaClient):
         self.fail_create = False
         self.fail_get = False
 
-    async def create_payment(self, *, amount, currency, description, return_url, order_id) -> dict:
+    async def create_payment(
+        self, *, amount, currency, description, return_url, order_id,
+        payment_method=None, idempotence_key=None,
+    ) -> dict:
+        self.last_method = payment_method
+        self.last_key = idempotence_key
         if self.fail_create:
             raise YookassaError("ЮKassa недоступна (симулировано тестом)")
         payment_id = f"yk-{uuid.uuid4().hex[:12]}"

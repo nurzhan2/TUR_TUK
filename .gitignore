@@ -26,3 +26,7 @@ workspace/backend/.env
 
 workspace/deploy/prod/.env
 workspace/deploy/prod/secrets/
+workspace/client_app/android/key.properties
+workspace/courier_app/android/key.properties
+*.jks
+*.keystore

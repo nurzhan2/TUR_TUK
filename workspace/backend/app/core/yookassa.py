@@ -36,11 +36,16 @@ class YookassaClient:
         description: str,
         return_url: str,
         order_id: int,
+        payment_method: str | None = None,
+        idempotence_key: str | None = None,
     ) -> dict:
-        """POST /payments. `Idempotence-Key` обязателен у ЮKassa — без него
-        повтор запроса (например, ретрай по таймауту на нашей стороне) создал
-        бы второй платёж на тот же заказ вместо того, чтобы просто вернуть
-        уже созданный."""
+        """POST /payments. `Idempotence-Key` обязателен у ЮKassa: со стабильным
+        ключом повтор запроса (ретрай по таймауту) возвращает уже созданный
+        платёж, а не создаёт второй на тот же заказ.
+
+        `payment_method` (`card` | `sbp`) — выбор гостя в приложении: ЮKassa
+        сразу открывает этот способ, без повторного выбора на своей странице.
+        """
         body = {
             "amount": {"value": f"{amount:.2f}", "currency": currency},
             "capture": True,
@@ -51,12 +56,15 @@ class YookassaClient:
             # сверка со стороны ЮKassa (выгрузка, поддержка) без похода в нашу БД.
             "metadata": {"order_id": str(order_id)},
         }
+        method_type = {"card": "bank_card", "sbp": "sbp"}.get(payment_method or "")
+        if method_type:
+            body["payment_method_data"] = {"type": method_type}
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.post(
                 f"{_BASE_URL}/payments",
                 json=body,
                 auth=self._auth,
-                headers={"Idempotence-Key": str(uuid.uuid4())},
+                headers={"Idempotence-Key": idempotence_key or str(uuid.uuid4())},
             )
         if resp.status_code >= 300:
             raise YookassaError(f"ЮKassa create payment: {resp.status_code} {resp.text}")

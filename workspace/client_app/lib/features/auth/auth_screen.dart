@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../controllers/controller_state.dart';
+import '../../core/content/app_content.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -135,13 +137,36 @@ class _PhoneStepState extends State<_PhoneStep> {
             child: loading ? const _ButtonSpinner() : Text(l10n.authGetCode),
           ),
           const Spacer(),
-          const Text(
-            // TODO l10n: юридическая формулировка ещё не согласована
-            'Нажимая «Получить код», вы соглашаетесь с условиями сервиса '
-            'и политикой обработки персональных данных',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-          ),
+          // Ссылка на политику — из админки (Настройки → Контакты). Без
+          // открывающейся политики App Store и Google Play не пропустят.
+          Builder(builder: (context) {
+            final policy = AppContent.instance.contacts.privacyPolicyUrl;
+            const style = TextStyle(fontSize: 12, color: AppColors.textMuted);
+            if (policy.isEmpty) {
+              return const Text(
+                'Нажимая «Получить код», вы соглашаетесь с условиями сервиса '
+                'и политикой обработки персональных данных',
+                textAlign: TextAlign.center,
+                style: style,
+              );
+            }
+            return GestureDetector(
+              onTap: () => launchUrl(Uri.parse(policy), mode: LaunchMode.externalApplication),
+              child: const Text.rich(
+                TextSpan(
+                  style: style,
+                  children: [
+                    TextSpan(text: 'Нажимая «Получить код», вы соглашаетесь с условиями сервиса и '),
+                    TextSpan(
+                      text: 'политикой обработки персональных данных',
+                      style: TextStyle(decoration: TextDecoration.underline, color: AppColors.accent),
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }),
           const SizedBox(height: 12),
         ],
       ),

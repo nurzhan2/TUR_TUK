@@ -99,4 +99,13 @@ class AuthController extends ChangeNotifier {
     state = ControllerState.initial;
     notifyListeners();
   }
+  /// Удалить аккаунт. Ошибку (нет сети) пробрасываем — экран покажет её,
+  /// и гость не решит, что данные удалены, когда это не так.
+  Future<void> deleteAccount() async {
+    await Di.auth.deleteAccount();
+    profile = null;
+    phone = null;
+    state = ControllerState.initial;
+    notifyListeners();
+  }
 }

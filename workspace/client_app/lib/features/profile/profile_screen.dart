@@ -101,6 +101,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               onTap: _logout,
             ),
+          if (profile != null)
+            ListTile(
+              leading: const Icon(Icons.person_remove_outlined, color: AppColors.textMuted),
+              title: const Text(
+                'Удалить аккаунт',
+                style: TextStyle(color: AppColors.textMuted),
+              ),
+              onTap: _confirmDeleteAccount,
+            ),
           const SizedBox(height: 24),
           Center(
             child: Text(
@@ -118,6 +127,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _logout() async {
     await context.read<AuthController>().logout();
     if (mounted) context.go(AppRoutes.auth);
+  }
+
+  /// Удаление аккаунта — с явным подтверждением: действие необратимо.
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Удалить аккаунт?'),
+        content: const Text(
+          'Имя, телефон, отель и номер будут удалены. История заказов '
+          'останется обезличенной для учёта. Отменить это нельзя.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.accent),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await context.read<AuthController>().deleteAccount();
+      if (!mounted) return;
+      messenger.showSnackBar(const SnackBar(content: Text('Аккаунт удалён')));
+      context.go(AppRoutes.auth);
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Не удалось удалить аккаунт — проверьте интернет и попробуйте ещё раз.'),
+      ));
+    }
   }
 
   /// «О приложении» — название, подзаголовок и контакты поддержки из

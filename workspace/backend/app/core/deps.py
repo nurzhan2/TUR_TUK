@@ -52,9 +52,9 @@ async def get_current_user(
         select(User).options(selectinload(User.role)).where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
-    if user is None:
-        # Токен подписан верно, но пользователя уже нет (например, удалён) —
-        # это тоже «не авторизован», а не 404: клиенту нечего искать по id.
+    if user is None or not user.is_active:
+        # Пользователь удалён или отключён в админке (курьер уволен, гость
+        # удалил аккаунт) — выданный ранее токен больше не действует.
         raise _UNAUTHORIZED
     return user
 

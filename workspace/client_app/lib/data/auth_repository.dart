@@ -19,6 +19,10 @@ abstract class AuthRepository {
   Future<UserProfile?> currentUser();
 
   Future<void> logout();
+
+  /// Удаление аккаунта и персональных данных (требование App Store и
+  /// Google Play для приложений с регистрацией). После него — как logout.
+  Future<void> deleteAccount();
 }
 
 class DemoAuthRepository implements AuthRepository {
@@ -72,6 +76,9 @@ class DemoAuthRepository implements AuthRepository {
     await Future<void>.delayed(kDemoLatency);
     DemoState.instance.signOut();
   }
+
+  @override
+  Future<void> deleteAccount() => logout();
 }
 
 /// Боевая авторизация: `backend/app/api/auth.py`.
@@ -164,6 +171,16 @@ class ApiAuthRepository implements AuthRepository {
         await _api.delete('/auth/fcm-token');
       } catch (_) {}
     }
+    _cached = null;
+    _api.accessToken = null;
+    await _storage.clear();
+  }
+
+  /// `DELETE /auth/me`: сервер стирает имя, телефон, отель и токен
+  /// устройства; локально — как обычный выход.
+  @override
+  Future<void> deleteAccount() async {
+    await _api.delete('/auth/me');
     _cached = null;
     _api.accessToken = null;
     await _storage.clear();

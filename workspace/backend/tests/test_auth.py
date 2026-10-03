@@ -129,6 +129,29 @@ async def test_me_returns_profile_and_fcm_token_saved(client, fake_sms):
     assert (await client.get("/auth/me")).status_code == 401
 
 
+async def test_delete_account_wipes_personal_data_and_token(client, fake_sms, monkeypatch):
+    monkeypatch.setattr(get_settings(), "sms_resend_seconds", 0)
+    phone = _phone("011")
+    await client.post("/auth/send-code", json={"phone": phone})
+    tokens = (await client.post(
+        "/auth/verify-code", json={"phone": phone, "code": fake_sms.sent[phone]}
+    )).json()
+    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+
+    assert (await client.delete("/auth/me", headers=headers)).status_code == 204
+    # Старый токен больше не действует.
+    assert (await client.get("/auth/me", headers=headers)).status_code == 401
+
+    # Тот же номер регистрируется заново — как новый гость.
+    await client.post("/auth/send-code", json={"phone": phone})
+    again = await client.post("/auth/verify-code", json={"phone": phone, "code": fake_sms.sent[phone]})
+    assert again.status_code == 200
+    new_headers = {"Authorization": f"Bearer {again.json()['access_token']}"}
+    me = (await client.get("/auth/me", headers=new_headers)).json()
+    assert me["phone"] == phone
+    assert me["name"] is None
+
+
 async def test_verify_code_missing_fields_is_422(client):
     resp = await client.post("/auth/verify-code", json={"phone": _phone("007")})
     assert resp.status_code == 422

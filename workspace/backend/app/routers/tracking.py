@@ -61,7 +61,9 @@ async def _authenticate_ws(token: str, session: AsyncSession) -> User | None:
     result = await session.execute(
         select(User).options(selectinload(User.role)).where(User.id == user_id)
     )
-    return result.scalar_one_or_none()
+    user = result.scalar_one_or_none()
+    # Удалённый гость / уволенный курьер — как в REST (`get_current_user`).
+    return user if user is not None and user.is_active else None
 
 
 def _parse_point(raw: str) -> tuple[float, float] | None:

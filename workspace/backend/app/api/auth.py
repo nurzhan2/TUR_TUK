@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -11,6 +11,7 @@ from app.core.deps import get_current_user
 from app.core.security import create_access_token, create_refresh_token
 from app.core.sms import SmsProvider, SmsSendError, get_sms_provider
 from app.db.session import get_session
+from app.models.cart_item import CartItem
 from app.models.hotel import Hotel
 from app.models.sms_code import SmsVerificationCode
 from app.models.user import User
@@ -224,4 +225,39 @@ async def delete_fcm_token(
 ) -> None:
     """Выход из аккаунта: уведомления на это устройство больше не идут."""
     current_user.fcm_token = None
+    await session.commit()
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Удаление аккаунта гостем из приложения (App Store 5.1.1(v), Google
+    Play — то же требование).
+
+    Персональные данные стираются: имя, телефон, дата рождения, отель,
+    номер, токен устройства, коды входа. Сама строка остаётся обезличенной —
+    на неё ссылаются заказы, а их история нужна для учёта и возвратов.
+    Тот же номер телефона потом можно зарегистрировать заново с нуля.
+    """
+    if current_user.role.code != "client":
+        # Сотрудника удаляет владелец в админке, а не он сам из приложения.
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="аккаунт сотрудника удаляется в админке")
+
+    await session.execute(
+        update(SmsVerificationCode)
+        .where(SmsVerificationCode.phone == current_user.phone)
+        .values(consumed_at=datetime.now(timezone.utc))
+    )
+    await session.execute(delete(CartItem).where(CartItem.user_id == current_user.id))
+
+    current_user.phone = f"deleted-{current_user.id}"
+    current_user.name = None
+    current_user.dob = None
+    current_user.hotel_name = None
+    current_user.room_number = None
+    current_user.fcm_token = None
+    current_user.password_hash = None
+    current_user.is_active = False
     await session.commit()
