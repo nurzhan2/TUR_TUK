@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 
 from fastapi import FastAPI, Request, status
@@ -41,6 +42,8 @@ app.add_middleware(
 )
 
 # Картинки из локального хранилища (пока не настроен S3, см. app/services/storage.py).
+# На Windows в реестре нет типа для .webp — без этого фото уходили бы как octet-stream.
+mimetypes.add_type("image/webp", ".webp")
 _media = Path(settings.media_dir)
 _media.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(_media)), name="media")

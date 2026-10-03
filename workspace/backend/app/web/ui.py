@@ -69,6 +69,19 @@ def _money(value: Any) -> str:
 templates.env.filters["money"] = _money
 
 
+def _num(value: Any) -> str:
+    """2450.00 → «2450», 12.50 → «12.5» — для полей ввода; пустое остаётся пустым."""
+    if value is None or value == "":
+        return ""
+    try:
+        return f"{float(value):.2f}".rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return str(value)
+
+
+templates.env.filters["num"] = _num
+
+
 def render(request: Request, template: str, admin, active: str = "", **context: Any):
     flash = FLASH_MESSAGES.get(request.query_params.get("ok", ""))
     return no_store(templates.TemplateResponse(

@@ -22,7 +22,7 @@
 
   <div class="card">
     <h2>Бренд</h2>
-    <div class="row" style="align-items:flex-start;gap:20px">
+    <div class="row" style="align-items:flex-start;gap:20px;margin-bottom:16px">
       <div>
         <label>Логотип</label>
         <div class="logo-box" title="Загрузить логотип">
@@ -47,9 +47,9 @@
   <div class="card">
     <h2>Доставка и суммы</h2>
     <div class="grid g2">
-      <div class="field"><label for="minOrderTotal">Минимальный заказ, ₽</label><input id="minOrderTotal" name="minOrderTotal" type="text" inputmode="decimal" value="{{ '%g'|format(s.delivery.minOrderTotal) }}"></div>
-      <div class="field"><label for="deliveryFee">Стоимость доставки, ₽</label><input id="deliveryFee" name="deliveryFee" type="text" inputmode="decimal" value="{{ '%g'|format(s.delivery.deliveryFee) }}"></div>
-      <div class="field"><label for="freeDeliveryFrom">Бесплатно от, ₽</label><input id="freeDeliveryFrom" name="freeDeliveryFrom" type="text" inputmode="decimal" value="{{ '%g'|format(s.delivery.freeDeliveryFrom) }}"><div class="hint">0 — всегда платная</div></div>
+      <div class="field"><label for="minOrderTotal">Минимальный заказ, ₽</label><input id="minOrderTotal" name="minOrderTotal" type="text" inputmode="decimal" value="{{ s.delivery.minOrderTotal|num }}"></div>
+      <div class="field"><label for="deliveryFee">Стоимость доставки, ₽</label><input id="deliveryFee" name="deliveryFee" type="text" inputmode="decimal" value="{{ s.delivery.deliveryFee|num }}"></div>
+      <div class="field"><label for="freeDeliveryFrom">Бесплатно от, ₽</label><input id="freeDeliveryFrom" name="freeDeliveryFrom" type="text" inputmode="decimal" value="{{ s.delivery.freeDeliveryFrom|num }}"><div class="hint">0 — всегда платная</div></div>
       <div class="field"><label for="etaMinutes">Время доставки, мин</label><input id="etaMinutes" name="etaMinutes" type="number" min="5" value="{{ s.delivery.etaMinutes }}"></div>
     </div>
     <div class="hint">Сервер считает заказ по этим же суммам — что гость видит в корзине, то и спишется.</div>

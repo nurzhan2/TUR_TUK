@@ -36,11 +36,11 @@
     <div class="grid g3">
       <div class="field">
         <label for="price">Цена, ₽</label>
-        <input id="price" name="price" type="text" inputmode="decimal" value="{{ p.price if p.price is not none else '' }}" required>
+        <input id="price" name="price" type="text" inputmode="decimal" value="{{ p.price|num }}" required>
       </div>
       <div class="field">
         <label for="old_price">Старая цена, ₽</label>
-        <input id="old_price" name="old_price" type="text" inputmode="decimal" value="{{ p.old_price if p.old_price is not none else '' }}">
+        <input id="old_price" name="old_price" type="text" inputmode="decimal" value="{{ p.old_price|num }}">
         <div class="hint">Для бейджа скидки, если выше цены</div>
       </div>
       <div class="field">

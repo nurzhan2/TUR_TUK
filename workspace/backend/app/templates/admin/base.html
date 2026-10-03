@@ -35,6 +35,7 @@ a{color:var(--accent);text-decoration:none}
 .head .sub{color:var(--muted);margin-top:2px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
 .card+.card{margin-top:16px}
+.grid>.card,.grid>div>.card:first-child{margin-top:0}
 .card h2{font-size:16px;margin:0 0 14px}
 .grid{display:grid;gap:16px}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
