@@ -49,6 +49,12 @@ class Order(TimestampMixin, Base):
         server_default=OrderStatus.CREATED.value,
     )
     total: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    # Разбивка итога для чека и админки: total = subtotal − discount + delivery_fee.
+    subtotal: Mapped[float | None] = mapped_column(Numeric(10, 2))
+    discount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, server_default="0")
+    delivery_fee: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, server_default="0")
+    # Выбор гостя на чекауте: card | sbp. Передаётся в ЮKassa при оплате.
+    payment_method: Mapped[str | None] = mapped_column(String(16))
     payment_status: Mapped[OrderPaymentStatus] = mapped_column(
         Enum(OrderPaymentStatus, name="order_payment_status", create_type=False,
              values_callable=lambda enum_cls: [e.value for e in enum_cls]),

@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Date, ForeignKey, String
+from sqlalchemy import Boolean, Date, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -22,5 +22,9 @@ class User(TimestampMixin, Base):
     # ещё не прислал его (регистрация устройства — предмет отдельной задачи,
     # см. docs/DECISIONS.md), FcmSender на пустом токене просто не шлёт.
     fcm_token: Mapped[str | None] = mapped_column(String(255))
+    # Только у персонала: вход в веб-админку по телефону и паролю, без SMS.
+    # Хэш scrypt, формат — `app/core/passwords.py`.
+    password_hash: Mapped[str | None] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 
     role: Mapped["Role"] = relationship()

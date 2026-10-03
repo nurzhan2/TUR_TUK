@@ -12,6 +12,8 @@ class PromoCode(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    # Подпись для персонала и баннера: «Скидка 10% на первый заказ».
+    title: Mapped[str | None] = mapped_column(String(255))
     discount_percent: Mapped[float | None] = mapped_column(Numeric(5, 2))
     discount_amount: Mapped[float | None] = mapped_column(Numeric(10, 2))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")

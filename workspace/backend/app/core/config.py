@@ -17,6 +17,14 @@ class Settings(BaseSettings):
     s3_access_key_id: str | None = None
     s3_secret_access_key: str | None = None
 
+    # Локальное хранилище картинок, пока S3 не настроен (см. app/services/storage.py).
+    media_dir: str = "media"
+    # Публичный адрес API (https://api.example.com) — из него строятся полные
+    # ссылки на /media/... для мобильного приложения. Пусто — берётся адрес запроса.
+    public_base_url: str | None = None
+    # Откуда разрешены запросы браузера (web-сборки приложений). Через запятую; * — все.
+    cors_origins: str = "*"
+
     # dev-дефолт — как у database_url. В проде переопределяется через .env/окружение.
     jwt_secret_key: str = "dev-insecure-secret-change-me-in-production-env"
     jwt_algorithm: str = "HS256"

@@ -1,23 +1,35 @@
 {% extends "admin/base.html" %}
-{% block title %}Вход — TUR TUK админка{% endblock %}
-{% block nav %}{% endblock %}
+{% block title %}Вход{% endblock %}
+{% block head %}
+<style>
+.main{display:grid;place-items:center;min-height:100vh;padding:24px;
+  background:radial-gradient(1200px 600px at 10% -10%,#f3d9d9 0,transparent 60%),radial-gradient(900px 500px at 110% 110%,#efe3d6 0,transparent 55%),var(--bg)}
+.login{width:100%;max-width:400px}
+.login .brand{display:flex;align-items:center;gap:12px;margin-bottom:22px;font-weight:700;font-size:18px}
+.login .brand i{width:44px;height:44px;border-radius:14px;background:var(--accent);color:#fff;display:grid;place-items:center;font-style:normal}
+.login h1{font-size:22px;margin:0 0 4px}
+.login .btn{width:100%;height:46px;margin-top:6px}
+</style>
+{% endblock %}
 {% block content %}
-<div class="card" style="max-width: 360px; margin: 40px auto;">
-    <h1 style="font-size: 18px; margin-top: 0;">Вход для персонала</h1>
-    <p class="muted" style="font-size: 13px;">
-        Код приходит тем же способом, что и обычным пользователям приложения.
-    </p>
-    {% if error %}
-    <p class="error">{{ error }}</p>
-    {% endif %}
-    <form method="post" action="/admin/login">
+<div class="login">
+  <div class="brand"><i>TT</i>TUR TUK</div>
+  <div class="card">
+    <h1>Вход в админку</h1>
+    <p class="muted" style="margin:0 0 18px">Телефон и пароль сотрудника</p>
+    {% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+    <form method="post" action="/admin/login" autocomplete="on">
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="field">
         <label for="phone">Телефон</label>
-        <input id="phone" name="phone" type="tel" placeholder="+7..." required>
-
-        <label for="code">Код из SMS</label>
-        <input id="code" name="code" type="text" inputmode="numeric" required>
-
-        <button type="submit">Войти</button>
+        <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="+7 900 000-00-00" value="{{ phone }}" required autofocus autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password">
+      </div>
+      <button class="btn" type="submit">Войти</button>
     </form>
+  </div>
 </div>
 {% endblock %}

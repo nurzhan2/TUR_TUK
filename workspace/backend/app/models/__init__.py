@@ -1,5 +1,6 @@
 """SQLAlchemy models. Importing this package registers all tables on `Base.metadata`."""
 
+from app.models.app_setting import AppSetting
 from app.models.bot_response import BotResponse
 from app.models.cart_item import CartItem
 from app.models.category import Category
@@ -17,6 +18,7 @@ from app.models.sms_code import SmsVerificationCode
 from app.models.user import User
 
 __all__ = [
+    "AppSetting",
     "BotResponse",
     "CartItem",
     "Category",

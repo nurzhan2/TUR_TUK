@@ -324,7 +324,7 @@ async def test_repeat_with_unavailable_item_returns_partial_list_with_warning(
     assert body["skipped_items"] == [
         {"product_id": unavailable_product.id, "product_name": unavailable_product.name}
     ]
-    assert body["order"]["total"] == 3000
+    assert body["order"]["total"] == 3300  # 3000 + доставка 300
 
     async with async_session_factory() as session:
         items = (

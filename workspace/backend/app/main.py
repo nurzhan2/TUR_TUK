@@ -1,7 +1,12 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.admin import router as admin_router
+from app.api.app_config import router as app_config_router
 from app.api.auth import router as auth_router
 from app.api.cart import router as cart_router
 from app.api.catalog import router as catalog_router
@@ -16,17 +21,40 @@ from app.web.admin import router as admin_web_router
 from app.web.deps import AdminAuthRequired
 from app.web.hotels import router as admin_hotels_web_router
 from app.web.products import router as admin_products_web_router
+from app.web.promo import router as admin_promo_web_router
+from app.web.settings import router as admin_settings_web_router
+from app.web.staff import router as admin_staff_web_router
 
 settings = get_settings()
 
 app = FastAPI(title=settings.app_name)
 
+# Web-сборки приложений (демо, PWA) ходят в API из браузера с другого домена.
+# Авторизация — Bearer-заголовок, не cookie, поэтому credentials не нужны.
+_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins or ["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["ETag"],
+)
+
+# Картинки из локального хранилища (пока не настроен S3, см. app/services/storage.py).
+_media = Path(settings.media_dir)
+_media.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=str(_media)), name="media")
+
 app.include_router(health_router)
+app.include_router(app_config_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(admin_web_router)
 app.include_router(admin_products_web_router)
 app.include_router(admin_hotels_web_router)
+app.include_router(admin_promo_web_router)
+app.include_router(admin_settings_web_router)
+app.include_router(admin_staff_web_router)
 app.include_router(orders_router)
 app.include_router(catalog_router)
 app.include_router(cart_router)
@@ -36,18 +64,18 @@ app.include_router(chat_router)
 app.include_router(tracking_router)
 
 
+@app.get("/", include_in_schema=False)
+async def root() -> RedirectResponse:
+    return RedirectResponse(url="/admin/")
+
+
 @app.exception_handler(AdminAuthRequired)
 async def _admin_auth_required(request: Request, exc: AdminAuthRequired) -> RedirectResponse:
-    """Веб-админка не отвечает 401/403 на страницы — страницу заменяет форма
-    логина, а не JSON-ошибка (см. app/web/deps.py).
-
-    `Cache-Control: no-store` — этот самый редирект и есть ответ на критерий
-    приёмки «GET /admin/ без cookie -> 302»; без явного запрета кэширования
-    ответ по этому URL кэшируется недетерминированно (зависит от клиента),
-    а раз тело/код ответа на `/admin/` целиком зависит от cookie, а не от
-    URL, недетерминированное кэширование — риск однажды отдать 200 из кэша
-    на запрос без cookie или наоборот."""
-    response = RedirectResponse(url="/admin/login", status_code=status.HTTP_302_FOUND)
+    """Страница админки без входа ведёт на форму логина, а не отдаёт JSON 401."""
+    target = "/admin/login"
+    if request.url.path not in ("/admin", "/admin/"):
+        target += f"?next={request.url.path}"
+    response = RedirectResponse(url=target, status_code=status.HTTP_302_FOUND)
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
     response.headers["Pragma"] = "no-cache"
     return response

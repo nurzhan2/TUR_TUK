@@ -1,94 +1,49 @@
 {% extends "admin/base.html" %}
-{% block title %}Товары — TUR TUK админка{% endblock %}
+{% block title %}Товары{% endblock %}
 {% block content %}
-<style>
-    .filter-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
-    .filter-row label { font-size: 13px; color: var(--muted); }
-    .filter-row input, .filter-row select { margin: 4px 0 0; }
-    select {
-        display: block; width: 100%; padding: 8px 10px; margin: 6px 0 14px;
-        border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
-    }
-    table.products-table { width: 100%; border-collapse: collapse; }
-    table.products-table th, table.products-table td {
-        text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 14px;
-    }
-    table.products-table th { color: var(--muted); font-weight: 600; }
-    img.thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
-    form.inline { display: inline; }
-    .link-danger { background: transparent; color: var(--bordo-dark); padding: 0; margin-left: 12px; }
-</style>
-
-<div class="card" style="margin-bottom:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h1 style="font-size:18px; margin:0;">Товары</h1>
-        <a class="button" href="/admin/products/new">Добавить товар</a>
-    </div>
-
-    {% if error == "in_use" %}
-    <p class="error">Нельзя удалить товар: он уже есть в чьём-то заказе или в корзине. Снимите его с продажи переключателем «в наличии» вместо удаления.</p>
-    {% endif %}
-
-    <form method="get" action="/admin/products">
-        <div class="filter-row">
-            <label>Название
-                <input type="text" name="q" value="{{ q }}" placeholder="поиск по названию">
-            </label>
-            <label>Категория
-                <select name="category_id">
-                    <option value="">Все категории</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}" {% if category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <button type="submit">Найти</button>
-            <a class="button" href="/admin/products">Сбросить</a>
-        </div>
-    </form>
+<div class="head">
+  <div><h1>Товары</h1><div class="sub">{{ products|length }} в списке · видимые попадают в приложение сразу</div></div>
+  <a class="btn" href="/admin/products/new">+ Добавить товар</a>
 </div>
 
+<form class="filters" method="get" action="/admin/products">
+  <input type="search" name="q" value="{{ filters.q }}" placeholder="Название или артикул">
+  <select name="category" onchange="this.form.submit()">
+    <option value="">Все категории</option>
+    {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if filters.category == c.id }}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <input type="hidden" name="show" value="{{ filters.show }}">
+  <button class="btn ghost" type="submit">Найти</button>
+  <div class="tabs" style="margin-left:auto">
+    <a href="?show=all" class="{{ 'on' if filters.show == 'all' }}">Все</a>
+    <a href="?show=hidden" class="{{ 'on' if filters.show == 'hidden' }}">Скрытые</a>
+    <a href="?show=nophoto" class="{{ 'on' if filters.show == 'nophoto' }}">Без фото</a>
+  </div>
+</form>
+
 <div class="card">
-    {% if admin is none %}
-    <p class="muted">Список товаров виден персоналу после <a href="/admin/login">входа</a>.</p>
-    {% else %}
-    <table class="products-table">
-        <thead>
-            <tr>
-                <th>Фото</th>
-                <th>Название</th>
-                <th>Категория</th>
-                <th>Цена</th>
-                <th>В наличии</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in products %}
-            <tr>
-                <td>{% if product.photo_url %}<img class="thumb" src="{{ product.photo_url }}" alt="">{% else %}<span class="muted">—</span>{% endif %}</td>
-                <td>{{ product.name }}</td>
-                <td>{{ category_names.get(product.category_id, product.category_id) }}</td>
-                <td>{{ "%.2f"|format(product.price|float) }} ₽</td>
-                <td>
-                    <form class="inline" method="post" action="/admin/products/{{ product.id }}/toggle">
-                        <button type="submit">{{ "да" if product.is_available else "нет" }}</button>
-                    </form>
-                </td>
-                <td>
-                    <a href="/admin/products/{{ product.id }}/edit">править</a>
-                    <form class="inline" method="post" action="/admin/products/{{ product.id }}/delete" onsubmit="return confirm('Удалить товар?');">
-                        <button type="submit" class="link-danger">удалить</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="6" class="muted">Товаров пока нет.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endif %}
+  {% if products %}
+  <div class="table-wrap"><table class="products-table">
+    <thead><tr><th></th><th>Название</th><th>Категория</th><th class="right">Цена</th><th>В приложении</th><th></th></tr></thead>
+    <tbody>
+    {% for p in products %}
+      <tr>
+        <td style="width:60px">{% if p.photo_url %}<img class="thumb" src="{{ p.photo_url }}" alt="" loading="lazy">{% else %}<div class="thumb empty">нет фото</div>{% endif %}</td>
+        <td><a href="/admin/products/{{ p.id }}/edit"><b>{{ p.name }}</b></a><div class="muted">{{ p.sku or '' }}{% if p.unit %} · {{ p.unit }}{% endif %}</div></td>
+        <td>{{ category_names.get(p.category_id, '—') }}</td>
+        <td class="right"><b>{{ p.price|money }}</b>{% if p.old_price %}<div class="muted" style="text-decoration:line-through">{{ p.old_price|money }}</div>{% endif %}</td>
+        <td>
+          <form method="post" action="/admin/products/{{ p.id }}/toggle" class="inline">
+            <label class="switch"><input type="checkbox" {{ 'checked' if p.is_available }} onchange="this.form.submit()"><span class="muted">{{ 'Виден' if p.is_available else 'Скрыт' }}</span></label>
+          </form>
+        </td>
+        <td class="right"><a class="btn ghost sm" href="/admin/products/{{ p.id }}/edit">Изменить</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state">Товаров не найдено. <a href="/admin/products/new">Добавить товар</a></div>
+  {% endif %}
 </div>
 {% endblock %}

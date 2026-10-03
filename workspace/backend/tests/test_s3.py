@@ -51,7 +51,21 @@ def fake_s3(monkeypatch):
     # Патчим имя внутри app.services.storage, а не app.core.s3: storage.py
     # импортировал `s3_client` себе в модуль, оригинал в core трогать незачем.
     monkeypatch.setattr(storage, "s3_client", _fake_s3_client)
+    # Без S3_ENDPOINT_URL/S3_BUCKET store_image пишет на диск — здесь проверяем ветку S3.
+    monkeypatch.setattr(storage, "_s3_configured", lambda: True)
     return client
+
+
+def _png_bytes() -> bytes:
+    """Настоящая картинка: store_image открывает файл Pillow и пережимает в WebP."""
+    from PIL import Image
+
+    buf = BytesIO()
+    Image.new("RGB", (40, 30), (139, 0, 0)).save(buf, format="PNG")
+    return buf.getvalue()
+
+
+REAL_IMAGE = _png_bytes()
 
 
 def _upload_file(name: str, content_type: str, data: bytes = b"fake-image-bytes") -> UploadFile:
@@ -174,14 +188,15 @@ async def test_admin_upload_product_photo_sets_url(client: AsyncClient, fake_s3)
     resp = await client.post(
         f"/api/admin/products/{product.id}/photo",
         headers=_auth(token),
-        files={"file": ("photo.jpg", b"fake-image-bytes", "image/jpeg")},
+        files={"file": ("photo.jpg", REAL_IMAGE, "image/jpeg")},
     )
 
     assert resp.status_code == 200
     body = resp.json()
     assert body["photo_url"]
     assert len(fake_s3.put_calls) == 1
-    assert fake_s3.put_calls[0]["ContentType"] == "image/jpeg"
+    # Любой входной формат хранится пережатым в WebP.
+    assert fake_s3.put_calls[0]["ContentType"] == "image/webp"
 
 
 async def test_admin_upload_product_photo_rejects_bad_mime(client: AsyncClient, fake_s3):
@@ -236,14 +251,14 @@ async def test_courier_upload_delivery_photo_sets_url(client: AsyncClient, fake_
     resp = await client.post(
         f"/orders/{order.id}/delivery-photo",
         headers=_auth(token),
-        files={"file": ("box.png", b"box-bytes", "image/png")},
+        files={"file": ("box.png", REAL_IMAGE, "image/png")},
     )
 
     assert resp.status_code == 200
     body = resp.json()
     assert body["delivery_photo_url"]
     assert len(fake_s3.put_calls) == 1
-    assert fake_s3.put_calls[0]["ContentType"] == "image/png"
+    assert fake_s3.put_calls[0]["ContentType"] == "image/webp"
 
 
 async def test_courier_upload_delivery_photo_rejects_bad_mime(client: AsyncClient, fake_s3):

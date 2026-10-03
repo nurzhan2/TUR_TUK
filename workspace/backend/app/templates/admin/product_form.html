@@ -1,49 +1,99 @@
 {% extends "admin/base.html" %}
-{% block title %}{{ "Изменить товар" if product else "Новый товар" }} — TUR TUK админка{% endblock %}
-{% block content %}
+{% block title %}{{ 'Изменить товар' if product else 'Новый товар' }}{% endblock %}
+{% block head %}
 <style>
-    select, textarea {
-        display: block; width: 100%; padding: 8px 10px; margin: 6px 0 14px;
-        border: 1px solid var(--border); border-radius: 6px; font-size: 14px; font-family: inherit;
-    }
-    .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 6px 0 14px; }
-    .checkbox-row input { display: inline-block; width: auto; margin: 0; }
+.photo-box{border:2px dashed var(--line);border-radius:16px;aspect-ratio:1;display:grid;place-items:center;overflow:hidden;cursor:pointer;background:#faf8f7;transition:border-color .2s,background .2s;position:relative}
+.photo-box:hover{border-color:var(--accent);background:var(--accent-soft)}
+.photo-box img{width:100%;height:100%;object-fit:cover}
+.photo-box .ph{color:var(--muted);text-align:center;padding:20px}
+.photo-box input{position:absolute;inset:0;opacity:0;cursor:pointer}
 </style>
+{% endblock %}
+{% block content %}
+{% set p = product or draft or {} %}
+<div class="head">
+  <div><a href="/admin/products" class="muted">← Товары</a><h1>{{ p.name if product else 'Новый товар' }}</h1></div>
+  {% if product %}
+  <form method="post" action="/admin/products/{{ product.id }}/delete" data-confirm="Удалить товар? Если он был в заказах — он просто скроется.">
+    <button class="btn danger" type="submit">Удалить</button>
+  </form>
+  {% endif %}
+</div>
 
-<div class="card" style="max-width: 480px;">
-    <h1 style="font-size: 18px; margin-top: 0;">{{ "Изменить товар" if product else "Новый товар" }}</h1>
-    {% if admin is none %}
-    <p class="muted">Форма отправится после <a href="/admin/login">входа</a> — сохранение товаров доступно только персоналу.</p>
-    {% endif %}
-    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
 
-    <form method="post" action="{{ form_action }}" enctype="multipart/form-data">
-        <label for="name">Название</label>
-        <input id="name" name="name" type="text" value="{{ product.name if product else '' }}" required>
-
-        <label for="description">Описание</label>
-        <textarea id="description" name="description" rows="4">{{ product.description if product else '' }}</textarea>
-
+<form method="post" action="{{ form_action }}" enctype="multipart/form-data">
+<div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(240px,1fr);align-items:start">
+  <div class="card">
+    <div class="field">
+      <label for="name">Название</label>
+      <input id="name" name="name" type="text" value="{{ p.name or '' }}" required maxlength="255">
+    </div>
+    <div class="field">
+      <label for="description">Описание</label>
+      <textarea id="description" name="description" rows="5" placeholder="2–3 предложения: что это, чем хорошо">{{ p.description or '' }}</textarea>
+    </div>
+    <div class="grid g3">
+      <div class="field">
         <label for="price">Цена, ₽</label>
-        <input id="price" name="price" type="number" step="0.01" min="0" value="{{ product.price if product else '' }}" required>
-
+        <input id="price" name="price" type="text" inputmode="decimal" value="{{ p.price if p.price is not none else '' }}" required>
+      </div>
+      <div class="field">
+        <label for="old_price">Старая цена, ₽</label>
+        <input id="old_price" name="old_price" type="text" inputmode="decimal" value="{{ p.old_price if p.old_price is not none else '' }}">
+        <div class="hint">Для бейджа скидки, если выше цены</div>
+      </div>
+      <div class="field">
+        <label for="unit">Единица</label>
+        <input id="unit" name="unit" type="text" value="{{ p.unit or '' }}" placeholder="шт, 250 г, 1 л" maxlength="32">
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="field">
         <label for="category_id">Категория</label>
         <select id="category_id" name="category_id" required>
-            {% for category in categories %}
-            <option value="{{ category.id }}" {% if product and product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
-            {% endfor %}
+          {% for c in categories %}
+          <option value="{{ c.id }}" {{ 'selected' if p.category_id == c.id }}>{{ c.name }}</option>
+          {% endfor %}
         </select>
+      </div>
+      <div class="field">
+        <label for="sku">Артикул</label>
+        <input id="sku" name="sku" type="text" value="{{ p.sku or '' }}" maxlength="64">
+      </div>
+      <div class="field">
+        <label for="sort_order">Порядок</label>
+        <input id="sort_order" name="sort_order" type="number" value="{{ p.sort_order or 0 }}">
+        <div class="hint">Меньше — выше в каталоге</div>
+      </div>
+    </div>
+    <label class="switch"><input type="checkbox" name="is_available" {{ 'checked' if (not product and not draft) or p.is_available }}> Показывать в приложении</label>
+  </div>
 
-        <label class="checkbox-row">
-            <input type="checkbox" name="is_available" {% if not product or product.is_available %}checked{% endif %}>
-            В наличии
-        </label>
-
-        <label for="photo">Фото{% if product and product.photo_url %} (выберите новое, чтобы заменить текущее){% endif %}</label>
-        <input id="photo" name="photo" type="file" accept="image/jpeg,image/png">
-
-        <button type="submit">{{ "Сохранить" if product else "Добавить" }}</button>
-        <a class="button" href="/admin/products" style="background: transparent; color: var(--bordo); margin-left: 8px;">Отмена</a>
-    </form>
+  <div class="card">
+    <label>Фото</label>
+    <div class="photo-box" id="photoBox">
+      {% if product and product.photo_url %}<img id="preview" src="{{ product.photo_url }}" alt="">{% else %}<img id="preview" alt="" style="display:none"><div class="ph" id="placeholder">Нажмите или перетащите фото<br><small>квадратное, от 800×800</small></div>{% endif %}
+      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" id="photoInput">
+    </div>
+    <div class="hint">JPEG, PNG или WebP. Сожмём и обрежем метаданные сами.</div>
+    {% if product and product.photo_url %}
+    <label class="switch" style="margin-top:12px"><input type="checkbox" name="remove_photo"> Удалить фото</label>
+    {% endif %}
+  </div>
 </div>
+<div class="row" style="margin-top:18px">
+  <button class="btn" type="submit">{{ 'Сохранить' if product else 'Добавить товар' }}</button>
+  <a class="btn ghost" href="/admin/products">Отмена</a>
+</div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('photoInput').addEventListener('change',function(){
+  var f=this.files&&this.files[0]; if(!f) return;
+  var img=document.getElementById('preview'), ph=document.getElementById('placeholder');
+  img.src=URL.createObjectURL(f); img.style.display='block'; if(ph) ph.remove();
+});
+</script>
 {% endblock %}

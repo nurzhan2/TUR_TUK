@@ -34,12 +34,13 @@ from app.schemas.order import (
     RepeatOrderOut,
     RepeatSkippedItem,
 )
+from app.services.app_settings import delivery_fee_for, load_settings, min_order_total
 from app.services.order_notifications import notify_new_order, notify_order_status_changed
-from app.services.storage import build_key, upload_file, validate_image_type
+from app.services.storage import store_image
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
-# «Минимальная сумма заказа — 3000 ₽» (бриф, deliverable, must).
+# Запасное значение минимальной суммы: действующее берётся из настроек админки.
 MIN_ORDER_TOTAL = 3000.0
 
 _AVAILABLE = Product.is_available.is_(True)
@@ -141,10 +142,13 @@ async def create_order(
     )
     # Порог считается ДО промокода: скидка не должна давать возможность
     # обойти минимальную сумму заказа, которую иначе можно набрать честно.
-    if subtotal < MIN_ORDER_TOTAL:
+    # Минимум и доставка — из настроек админки, не из кода.
+    app_settings = await load_settings(session)
+    min_total = min_order_total(app_settings)
+    if subtotal < min_total:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"минимальная сумма заказа — {MIN_ORDER_TOTAL:.0f} ₽",
+            detail=f"минимальная сумма заказа — {min_total:.0f} ₽",
         )
 
     promo = None
@@ -153,10 +157,17 @@ async def create_order(
         promo = await get_valid_promo(session, payload.promo_code)
         discount = compute_discount(promo, subtotal)
 
+    # Бесплатная доставка — по сумме товаров до скидки, как показывает приложение.
+    delivery_fee = delivery_fee_for(app_settings, subtotal)
+
     order = Order(
         user_id=current_user.id,
         status=OrderStatus.CREATED,
-        total=subtotal - discount,
+        subtotal=subtotal,
+        discount=discount,
+        delivery_fee=delivery_fee,
+        total=subtotal - discount + delivery_fee,
+        payment_method=payload.payment_method,
         hotel_name=hotel.name,
         room_number=payload.room_number,
         promo_id=promo.id if promo is not None else None,
@@ -329,16 +340,22 @@ async def repeat_order(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="ни один товар из заказа не доступен для повтора",
         )
-    if subtotal < MIN_ORDER_TOTAL:
+    app_settings = await load_settings(session)
+    min_total = min_order_total(app_settings)
+    if subtotal < min_total:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"доступных товаров недостаточно для минимальной суммы заказа — {MIN_ORDER_TOTAL:.0f} ₽",
+            detail=f"доступных товаров недостаточно для минимальной суммы заказа — {min_total:.0f} ₽",
         )
 
+    delivery_fee = delivery_fee_for(app_settings, subtotal)
     new_order = Order(
         user_id=current_user.id,
         status=OrderStatus.CREATED,
-        total=subtotal,
+        subtotal=subtotal,
+        delivery_fee=delivery_fee,
+        total=subtotal + delivery_fee,
+        payment_method=order.payment_method,
         hotel_name=order.hotel_name,
         room_number=order.room_number,
     )
@@ -409,9 +426,7 @@ async def upload_delivery_photo(
             detail="фото доставки может загрузить только назначенный на заказ курьер",
         )
 
-    validate_image_type(file)
-    key = build_key("orders", str(order_id), "delivery", content_type=file.content_type)
-    url = await upload_file(file, get_settings().s3_bucket, key)
+    url = await store_image(file, "orders", str(order_id), "delivery")
 
     order.delivery_photo_url = url
     await session.commit()

@@ -1,34 +1,45 @@
 {% extends "admin/base.html" %}
-{% block title %}Изменить отель — TUR TUK админка{% endblock %}
+{% block title %}{{ hotel.name if hotel else 'Новый отель' }}{% endblock %}
 {% block content %}
-<div class="card" style="max-width: 480px;">
-    <h1 style="font-size: 18px; margin-top: 0;">Изменить отель</h1>
-    {% if error %}<p class="error">{{ error }}</p>{% endif %}
-
-    <form method="post" action="{{ form_action }}">
-        <label for="name">Название</label>
-        <input id="name" name="name" type="text" value="{{ hotel.name }}" required>
-
-        <label for="address">Адрес</label>
-        <input id="address" name="address" type="text" value="{{ hotel.address or '' }}">
-
-        <label for="category">Категория</label>
-        <input id="category" name="category" type="text" value="{{ hotel.category or '' }}" placeholder="3, 4, 5, HV-1...">
-
-        <label for="district">Район</label>
-        <input id="district" name="district" type="text" value="{{ hotel.district or '' }}">
-
-        <label for="rating">Рейтинг</label>
-        <input id="rating" name="rating" type="text" value="{{ hotel.rating if hotel.rating is not none else '' }}">
-
-        <label for="lat">Широта (lat)</label>
-        <input id="lat" name="lat" type="text" value="{{ hotel.lat if hotel.lat is not none else '' }}">
-
-        <label for="lon">Долгота (lon)</label>
-        <input id="lon" name="lon" type="text" value="{{ hotel.lon if hotel.lon is not none else '' }}">
-
-        <button type="submit">Сохранить</button>
-        <a class="button" href="/admin/hotels" style="background: transparent; color: var(--bordo); margin-left: 8px;">Отмена</a>
-    </form>
+<div class="head">
+  <div><a href="/admin/hotels" class="muted">← Отели</a><h1>{{ hotel.name if hotel else 'Новый отель' }}</h1></div>
+  {% if hotel %}
+  <form method="post" action="/admin/hotels/{{ hotel.id }}/delete" data-confirm="Удалить отель? Лучше просто выключить доставку — история заказов сохранится.">
+    <button class="btn danger" type="submit">Удалить</button>
+  </form>
+  {% endif %}
 </div>
+{% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+<form method="post" action="{{ form_action }}">
+<div class="card" style="max-width:720px">
+  <div class="field">
+    <label for="name">Название</label>
+    <input id="name" name="name" type="text" value="{{ hotel.name if hotel else '' }}" required maxlength="255">
+  </div>
+  <div class="field">
+    <label for="address">Адрес</label>
+    <input id="address" name="address" type="text" value="{{ hotel.address or '' if hotel else '' }}" maxlength="500">
+  </div>
+  <div class="field">
+    <label for="district">Район</label>
+    <input id="district" name="district" type="text" value="{{ hotel.district or '' if hotel else '' }}" placeholder="Кемер, Бельдиби, Гёйнюк…" maxlength="100">
+  </div>
+  <div class="grid g2">
+    <div class="field">
+      <label for="lat">Широта</label>
+      <input id="lat" name="lat" type="text" inputmode="decimal" value="{{ hotel.lat if hotel and hotel.lat is not none else '' }}" placeholder="36.6021">
+    </div>
+    <div class="field">
+      <label for="lon">Долгота</label>
+      <input id="lon" name="lon" type="text" inputmode="decimal" value="{{ hotel.lon if hotel and hotel.lon is not none else '' }}" placeholder="30.5619">
+    </div>
+  </div>
+  <div class="hint" style="margin:-6px 0 16px">Координаты нужны карте курьера и трекингу. Скопировать: Google Maps → правый клик по входу в отель → первая строка.</div>
+  <label class="switch"><input type="checkbox" name="is_active" {{ 'checked' if not hotel or hotel.is_active }}> Доставляем в этот отель</label>
+</div>
+<div class="row" style="margin-top:18px">
+  <button class="btn" type="submit">{{ 'Сохранить' if hotel else 'Добавить отель' }}</button>
+  <a class="btn ghost" href="/admin/hotels">Отмена</a>
+</div>
+</form>
 {% endblock %}

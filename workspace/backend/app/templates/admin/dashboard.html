@@ -1,11 +1,50 @@
 {% extends "admin/base.html" %}
-{% block title %}Дашборд — TUR TUK админка{% endblock %}
+{% block title %}Сводка{% endblock %}
 {% block content %}
-<div class="card">
-    <h1 style="font-size: 18px; margin-top: 0;">Добро пожаловать{% if admin.name %}, {{ admin.name }}{% endif %}</h1>
-    <p class="muted">
-        Роль: {{ admin.role.name }}. Разделы товаров, заказов, пользователей,
-        курьеров, отелей и промокодов появятся здесь по мере готовности.
-    </p>
+<div class="head">
+  <div><h1>Сводка</h1><div class="sub">Что происходит сегодня</div></div>
+  <a class="btn" href="/admin/products/new">+ Товар</a>
+</div>
+
+<div class="grid g4">
+  <div class="card stat"><div class="k">Заказов сегодня</div><div class="v">{{ stats.orders_today }}</div></div>
+  <div class="card stat"><div class="k">В работе сейчас</div><div class="v">{{ stats.active_orders }}</div></div>
+  <div class="card stat"><div class="k">Выручка сегодня</div><div class="v">{{ stats.revenue_today|money }}</div></div>
+  <div class="card stat"><div class="k">Выручка за 7 дней</div><div class="v">{{ stats.revenue_week|money }}</div></div>
+</div>
+
+{% if stats.products == 0 or stats.products_no_photo or stats.products_hidden %}
+<div class="card" style="margin-top:16px">
+  <h2>Каталог</h2>
+  <div class="row">
+    <span class="pill">{{ stats.products }} товаров</span>
+    {% if stats.products_no_photo %}<a class="pill warn" href="/admin/products?show=nophoto">{{ stats.products_no_photo }} без фото</a>{% endif %}
+    {% if stats.products_hidden %}<a class="pill" href="/admin/products?show=hidden">{{ stats.products_hidden }} скрыто</a>{% endif %}
+    {% if stats.products == 0 %}<a class="btn sm" href="/admin/products/new">Добавить первый товар</a>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top:16px">
+  <div class="head" style="margin-bottom:8px"><h2 style="margin:0">Последние заказы</h2><a href="/admin/orders">Все заказы →</a></div>
+  {% if recent %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>№</th><th>Гость</th><th>Отель</th><th>Сумма</th><th>Статус</th><th class="right">Создан</th></tr></thead>
+    <tbody>
+    {% for order, user in recent %}
+      <tr onclick="location.href='/admin/orders/{{ order.id }}'" style="cursor:pointer">
+        <td><b>#{{ order.id }}</b></td>
+        <td>{{ user.name or '—' }}<div class="muted">{{ user.phone }}</div></td>
+        <td>{{ order.hotel_name }}<div class="muted">номер {{ order.room_number }}</div></td>
+        <td>{{ order.total|money }}</td>
+        <td><span class="pill s-{{ order.status.value }}">{{ status_labels[order.status.value] }}</span></td>
+        <td class="right muted">{{ order.created_at.strftime('%d.%m %H:%M') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state">Заказов пока нет</div>
+  {% endif %}
 </div>
 {% endblock %}

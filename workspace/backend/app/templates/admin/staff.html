@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% block title %}Сотрудники{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Сотрудники</h1><div class="sub">Гостей в базе: {{ clients }}</div></div></div>
+{% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+
+<div class="card">
+  <h2>Добавить сотрудника</h2>
+  <form method="post" action="/admin/staff/new" class="row">
+    <input type="tel" name="phone" placeholder="Телефон" required style="flex:1;min-width:160px">
+    <input type="text" name="name" placeholder="Имя" style="flex:1;min-width:140px">
+    <select name="role" style="flex:1;min-width:150px">
+      {% for code, label in role_labels.items() %}<option value="{{ code }}" {{ 'selected' if code == 'courier' }}>{{ label }}</option>{% endfor %}
+    </select>
+    <input type="password" name="password" placeholder="Пароль для админки" autocomplete="new-password" style="flex:1;min-width:170px">
+    <button class="btn" type="submit">Добавить</button>
+  </form>
+  <div class="hint" style="margin-top:8px">Пароль нужен только тем, кто входит в админку (владелец, директор, администратор). Курьер входит в своё приложение по SMS на этот номер.</div>
+</div>
+
+<div class="card">
+  {% if staff %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Сотрудник</th><th>Роль</th><th>Новый пароль</th><th>Активен</th><th></th></tr></thead>
+    <tbody>
+    {% for u in staff %}
+      <tr>
+        <td><form id="u{{ u.id }}" method="post" action="/admin/staff/{{ u.id }}/edit"></form>
+          <input form="u{{ u.id }}" type="text" name="name" value="{{ u.name or '' }}" placeholder="Имя" style="min-width:150px">
+          <div class="muted" style="margin-top:4px">{{ u.phone }}{% if u.id == admin.id %} · это вы{% endif %}</div></td>
+        <td><select form="u{{ u.id }}" name="role">
+          {% for code, label in role_labels.items() %}<option value="{{ code }}" {{ 'selected' if u.role.code == code }}>{{ label }}</option>{% endfor %}
+        </select></td>
+        <td><input form="u{{ u.id }}" type="password" name="password" placeholder="{{ 'задан' if u.password_hash else 'не задан' }}" autocomplete="new-password" style="min-width:140px"></td>
+        <td><label class="switch"><input form="u{{ u.id }}" type="checkbox" name="is_active" {{ 'checked' if u.is_active }}></label></td>
+        <td class="right"><button class="btn ghost sm" type="submit" form="u{{ u.id }}">Сохранить</button></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state">Сотрудников пока нет</div>
+  {% endif %}
+</div>
+{% endblock %}

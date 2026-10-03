@@ -1,101 +1,50 @@
 {% extends "admin/base.html" %}
-{% block title %}Отели — TUR TUK админка{% endblock %}
+{% block title %}Отели{% endblock %}
 {% block content %}
-<style>
-    table.hotels-table { width: 100%; border-collapse: collapse; }
-    table.hotels-table th, table.hotels-table td {
-        text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 14px;
-    }
-    table.hotels-table th { color: var(--muted); font-weight: 600; }
-    form.inline { display: inline; }
-    .link-danger { background: transparent; color: var(--bordo-dark); padding: 0; margin-left: 12px; }
-    .form-grid { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-    .form-grid label { font-size: 13px; color: var(--muted); display: block; }
-    .form-grid input { width: 160px; }
-</style>
-
-<div class="card" style="margin-bottom:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h1 style="font-size:18px; margin:0;">Отели — зона доставки</h1>
-        <a class="button" href="/admin/hotels/import">Импорт из CSV</a>
-    </div>
-
-    {% if error == "duplicate" %}
-    <p class="error">Отель с таким названием уже есть в справочнике.</p>
-    {% endif %}
-    {% if imported is not none %}
-    <p class="muted">Импортировано/обновлено отелей: {{ imported }}.</p>
-    {% endif %}
-
-    <form method="post" action="/admin/hotels">
-        <div class="form-grid">
-            <label>Название
-                <input type="text" name="name" required>
-            </label>
-            <label>Адрес
-                <input type="text" name="address">
-            </label>
-            <label>Категория
-                <input type="text" name="category" placeholder="3, 4, 5, HV-1...">
-            </label>
-            <label>Район
-                <input type="text" name="district">
-            </label>
-            <label>Рейтинг
-                <input type="text" name="rating" placeholder="8.5">
-            </label>
-            <label>Широта (lat)
-                <input type="text" name="lat" placeholder="36.601">
-            </label>
-            <label>Долгота (lon)
-                <input type="text" name="lon" placeholder="30.559">
-            </label>
-            <button type="submit">Добавить отель</button>
-        </div>
-    </form>
+<div class="head">
+  <div><h1>Отели</h1><div class="sub">{{ active_count }} активных — их видит гость при регистрации и оформлении</div></div>
+  <div class="row">
+    <a class="btn ghost" href="/admin/hotels/import">Импорт CSV</a>
+    <a class="btn" href="/admin/hotels/new">+ Добавить отель</a>
+  </div>
 </div>
 
+{% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+
+<form class="filters" method="get" action="/admin/hotels">
+  <input type="search" name="q" value="{{ filters.q }}" placeholder="Название или адрес">
+  <input type="hidden" name="show" value="{{ filters.show }}">
+  <button class="btn ghost" type="submit">Найти</button>
+  <div class="tabs" style="margin-left:auto">
+    <a href="?show=all" class="{{ 'on' if filters.show == 'all' }}">Все</a>
+    <a href="?show=active" class="{{ 'on' if filters.show == 'active' }}">Активные</a>
+    <a href="?show=inactive" class="{{ 'on' if filters.show == 'inactive' }}">Выключенные</a>
+    <a href="?show=nocoords" class="{{ 'on' if filters.show == 'nocoords' }}">Без координат</a>
+  </div>
+</form>
+
 <div class="card">
-    <table class="hotels-table">
-        <thead>
-            <tr>
-                <th>Название</th>
-                <th>Адрес</th>
-                <th>Категория</th>
-                <th>Район</th>
-                <th>Рейтинг</th>
-                <th>lat / lon</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for hotel in hotels %}
-            <tr>
-                <td>{{ hotel.name }}</td>
-                <td>{{ hotel.address or "—" }}</td>
-                <td>{{ hotel.category or "—" }}</td>
-                <td>{{ hotel.district or "—" }}</td>
-                <td>{{ hotel.rating if hotel.rating is not none else "—" }}</td>
-                <td>
-                    {% if hotel.lat is not none and hotel.lon is not none %}
-                        {{ hotel.lat }}, {{ hotel.lon }}
-                    {% else %}
-                        <span class="muted">нет координат</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="/admin/hotels/{{ hotel.id }}/edit">править</a>
-                    <form class="inline" method="post" action="/admin/hotels/{{ hotel.id }}/delete" onsubmit="return confirm('Удалить отель?');">
-                        <button type="submit" class="link-danger">удалить</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="7" class="muted">Отелей пока нет.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  {% if hotels %}
+  <div class="table-wrap"><table class="hotels-table">
+    <thead><tr><th>Название</th><th>Адрес</th><th>Координаты</th><th>Доставка</th><th></th></tr></thead>
+    <tbody>
+    {% for h in hotels %}
+      <tr>
+        <td><a href="/admin/hotels/{{ h.id }}/edit"><b>{{ h.name }}</b></a>{% if h.district %}<div class="muted">{{ h.district }}</div>{% endif %}</td>
+        <td>{{ h.address or '—' }}</td>
+        <td>{% if h.lat is not none and h.lon is not none %}<a class="muted" target="_blank" href="https://www.openstreetmap.org/?mlat={{ h.lat }}&mlon={{ h.lon }}#map=17/{{ h.lat }}/{{ h.lon }}">{{ '%.4f'|format(h.lat) }}, {{ '%.4f'|format(h.lon) }}</a>{% else %}<span class="pill warn">нет</span>{% endif %}</td>
+        <td>
+          <form method="post" action="/admin/hotels/{{ h.id }}/toggle" class="inline">
+            <label class="switch"><input type="checkbox" {{ 'checked' if h.is_active }} onchange="this.form.submit()"><span class="muted">{{ 'Да' if h.is_active else 'Нет' }}</span></label>
+          </form>
+        </td>
+        <td class="right"><a class="btn ghost sm" href="/admin/hotels/{{ h.id }}/edit">Изменить</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state">Отелей не найдено</div>
+  {% endif %}
 </div>
 {% endblock %}

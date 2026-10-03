@@ -1,0 +1,111 @@
+{% extends "admin/base.html" %}
+{% block title %}Настройки{% endblock %}
+{% block head %}
+<style>
+.logo-box{width:120px;height:120px;border-radius:24px;border:2px dashed var(--line);display:grid;place-items:center;overflow:hidden;position:relative;background:#faf8f7;cursor:pointer;transition:border-color .2s}
+.logo-box:hover{border-color:var(--accent)}
+.logo-box img{width:100%;height:100%;object-fit:contain}
+.logo-box .tt{width:100%;height:100%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:30px}
+.logo-box input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.banner-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+.preview-banner{border-radius:16px;padding:18px 20px;color:#fff;margin-top:6px;min-height:84px;transition:background .2s}
+.preview-banner b{display:block;font-size:17px}
+.save-bar{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:20px 0 8px;margin-top:8px}
+@media (max-width:560px){.banner-row{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Настройки</h1><div class="sub">Всё, что здесь, приложение подтягивает при запуске — без обновления в сторе</div></div></div>
+
+<form method="post" action="/admin/settings" enctype="multipart/form-data">
+<div class="grid g2" style="align-items:start">
+
+  <div class="card">
+    <h2>Бренд</h2>
+    <div class="row" style="align-items:flex-start;gap:20px">
+      <div>
+        <label>Логотип</label>
+        <div class="logo-box" title="Загрузить логотип">
+          {% if logo_preview %}<img id="logoPreview" src="{{ logo_preview }}" alt="">{% else %}<div class="tt" id="logoTT" style="background:{{ s.brand.accentColor }}">TT</div><img id="logoPreview" alt="" style="display:none">{% endif %}
+          <input type="file" name="logo" accept="image/png,image/webp,image/jpeg" id="logoInput">
+        </div>
+        {% if logo_preview %}<label class="switch" style="margin-top:8px;font-size:13px"><input type="checkbox" name="removeLogo"> Убрать</label>{% endif %}
+        <div class="hint">PNG с прозрачным фоном</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div class="field"><label for="brandName">Название</label><input id="brandName" name="brandName" type="text" value="{{ s.brand.name }}" required></div>
+        <div class="field">
+          <label for="accentColor">Фирменный цвет</label>
+          <div class="row"><input id="accentColor" name="accentColor" type="color" value="{{ s.brand.accentColor }}"><span class="muted" id="accentHex">{{ s.brand.accentColor }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="field"><label for="tagline">Подзаголовок</label><input id="tagline" name="tagline" type="text" value="{{ s.brand.tagline }}"></div>
+    <div class="field"><label for="deliveryPromise">Обещание доставки</label><input id="deliveryPromise" name="deliveryPromise" type="text" value="{{ s.brand.deliveryPromise }}"><div class="hint">Под названием на главной: «Доставка в отель за 60 минут»</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Доставка и суммы</h2>
+    <div class="grid g2">
+      <div class="field"><label for="minOrderTotal">Минимальный заказ, ₽</label><input id="minOrderTotal" name="minOrderTotal" type="text" inputmode="decimal" value="{{ '%g'|format(s.delivery.minOrderTotal) }}"></div>
+      <div class="field"><label for="deliveryFee">Стоимость доставки, ₽</label><input id="deliveryFee" name="deliveryFee" type="text" inputmode="decimal" value="{{ '%g'|format(s.delivery.deliveryFee) }}"></div>
+      <div class="field"><label for="freeDeliveryFrom">Бесплатно от, ₽</label><input id="freeDeliveryFrom" name="freeDeliveryFrom" type="text" inputmode="decimal" value="{{ '%g'|format(s.delivery.freeDeliveryFrom) }}"><div class="hint">0 — всегда платная</div></div>
+      <div class="field"><label for="etaMinutes">Время доставки, мин</label><input id="etaMinutes" name="etaMinutes" type="number" min="5" value="{{ s.delivery.etaMinutes }}"></div>
+    </div>
+    <div class="hint">Сервер считает заказ по этим же суммам — что гость видит в корзине, то и спишется.</div>
+    <h2 style="margin-top:22px">Оплата</h2>
+    <div class="row" style="gap:24px">
+      <label class="switch"><input type="checkbox" name="cardEnabled" {{ 'checked' if s.payment.cardEnabled }}> Банковская карта</label>
+      <label class="switch"><input type="checkbox" name="sbpEnabled" {{ 'checked' if s.payment.sbpEnabled }}> СБП</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Контакты поддержки</h2>
+    <div class="grid g2">
+      <div class="field"><label for="phone">Телефон</label><input id="phone" name="phone" type="tel" value="{{ s.contacts.phone }}" placeholder="+90 …"></div>
+      <div class="field"><label for="whatsapp">WhatsApp</label><input id="whatsapp" name="whatsapp" type="tel" value="{{ s.contacts.whatsapp }}" placeholder="+90 …"></div>
+      <div class="field"><label for="telegram">Telegram</label><input id="telegram" name="telegram" type="text" value="{{ s.contacts.telegram }}" placeholder="@turtuk_support"></div>
+      <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" value="{{ s.contacts.email }}"></div>
+    </div>
+    <div class="field"><label for="supportHours">Часы работы</label><input id="supportHours" name="supportHours" type="text" value="{{ s.contacts.supportHours }}"></div>
+    <div class="field"><label for="privacyPolicyUrl">Ссылка на политику конфиденциальности</label><input id="privacyPolicyUrl" name="privacyPolicyUrl" type="url" value="{{ s.contacts.privacyPolicyUrl }}" placeholder="https://…"><div class="hint">Обязательно для App Store и Google Play</div></div>
+    <div class="field"><label for="supportUrl">Страница поддержки</label><input id="supportUrl" name="supportUrl" type="url" value="{{ s.contacts.supportUrl }}" placeholder="https://…"></div>
+  </div>
+
+  <div class="card">
+    <h2>Склад</h2>
+    <div class="field"><label for="warehouseName">Название</label><input id="warehouseName" name="warehouseName" type="text" value="{{ s.warehouse.name }}"></div>
+    <div class="field"><label for="warehouseAddress">Адрес</label><input id="warehouseAddress" name="warehouseAddress" type="text" value="{{ s.warehouse.address }}"></div>
+    <div class="grid g2">
+      <div class="field"><label for="warehouseLat">Широта</label><input id="warehouseLat" name="warehouseLat" type="text" inputmode="decimal" value="{{ s.warehouse.lat }}"></div>
+      <div class="field"><label for="warehouseLng">Долгота</label><input id="warehouseLng" name="warehouseLng" type="text" inputmode="decimal" value="{{ s.warehouse.lng }}"></div>
+    </div>
+    <div class="hint">Откуда стартует курьер на карте отслеживания</div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Баннеры на главной</h2>
+  <p class="muted" style="margin-top:-6px">Листаются сверху каталога. Пустой заголовок — баннер не показывается.</p>
+  {% for b in banners %}
+  <div class="banner-row">
+    <input type="text" name="banner_title_{{ loop.index0 }}" value="{{ b.title }}" placeholder="Заголовок {{ loop.index }}">
+    <input type="text" name="banner_subtitle_{{ loop.index0 }}" value="{{ b.subtitle }}" placeholder="Подпись">
+  </div>
+  {% endfor %}
+  <div class="preview-banner" id="bannerPreview" style="background:linear-gradient(135deg,{{ s.brand.accentColor }},#2b0b0b)"><b id="bpTitle">{{ banners[0].title or 'Заголовок баннера' }}</b><span id="bpSub">{{ banners[0].subtitle }}</span></div>
+</div>
+
+<div class="save-bar"><button class="btn" type="submit" style="height:46px;padding:0 28px">Сохранить настройки</button></div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+var c=document.getElementById('accentColor'),hex=document.getElementById('accentHex'),bp=document.getElementById('bannerPreview'),tt=document.getElementById('logoTT');
+c.addEventListener('input',function(){hex.textContent=c.value;bp.style.background='linear-gradient(135deg,'+c.value+',#2b0b0b)';if(tt)tt.style.background=c.value});
+document.querySelector('[name=banner_title_0]').addEventListener('input',function(){document.getElementById('bpTitle').textContent=this.value||'Заголовок баннера'});
+document.querySelector('[name=banner_subtitle_0]').addEventListener('input',function(){document.getElementById('bpSub').textContent=this.value});
+document.getElementById('logoInput').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f)return;var i=document.getElementById('logoPreview');i.src=URL.createObjectURL(f);i.style.display='block';if(tt)tt.remove()});
+</script>
+{% endblock %}

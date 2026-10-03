@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import Numeric, String
+from sqlalchemy import Boolean, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -33,3 +33,6 @@ class Hotel(TimestampMixin, Base):
     rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 1))
     lat: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
     lon: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
+    # Выключенный отель пропадает из списка в приложении, но остаётся в БД —
+    # старые заказы продолжают на него ссылаться по названию.
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")

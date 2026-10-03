@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% block title %}Категории{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Категории</h1><div class="sub">В приложении показываются только категории, в которых есть видимые товары</div></div></div>
+
+{% if message %}<div class="alert info">{{ message }}</div>{% endif %}
+
+<div class="card">
+  <h2>Новая категория</h2>
+  <form method="post" action="/admin/categories" class="row">
+    <input type="text" name="name" placeholder="Название" required style="flex:2;min-width:180px">
+    <select name="icon" style="flex:1;min-width:170px">
+      {% for key, label in icons %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+    </select>
+    <input type="number" name="sort_order" value="{{ (categories|length + 1) * 10 }}" style="width:110px" title="Порядок">
+    <button class="btn" type="submit">Добавить</button>
+  </form>
+</div>
+
+<div class="card">
+  {% if categories %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Название</th><th>Иконка</th><th>Порядок</th><th>Товаров</th><th></th></tr></thead>
+    <tbody>
+    {% for c in categories %}
+      <tr>
+        <td colspan="3" style="padding:8px 12px">
+          <form method="post" action="/admin/categories/{{ c.id }}/edit" class="row" id="cat{{ c.id }}">
+            <input type="text" name="name" value="{{ c.name }}" required style="flex:2;min-width:160px">
+            <select name="icon" style="flex:1;min-width:160px">
+              {% for key, label in icons %}<option value="{{ key }}" {{ 'selected' if (c.icon or 'basket') == key }}>{{ label }}</option>{% endfor %}
+            </select>
+            <input type="number" name="sort_order" value="{{ c.sort_order }}" style="width:90px">
+          </form>
+        </td>
+        <td><a href="/admin/products?category={{ c.id }}">{{ counts.get(c.id, 0) }}</a></td>
+        <td class="right">
+          <div class="actions">
+            <button class="btn ghost sm" type="submit" form="cat{{ c.id }}">Сохранить</button>
+            <form method="post" action="/admin/categories/{{ c.id }}/delete" class="inline" data-confirm="Удалить категорию «{{ c.name }}»?">
+              <button class="btn danger sm" type="submit">Удалить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state">Категорий пока нет</div>
+  {% endif %}
+</div>
+{% endblock %}

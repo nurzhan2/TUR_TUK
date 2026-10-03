@@ -166,7 +166,10 @@ async def test_order_at_minimum_is_accepted(client: AsyncClient):
         headers=_auth(token),
     )
     assert resp.status_code == 201
-    assert resp.json()["total"] == 3000
+    # 3000 товаров + 300 доставки: бесплатная — только от 5000 (настройки по умолчанию)
+    assert resp.json()["subtotal"] == 3000
+    assert resp.json()["delivery_fee"] == 300
+    assert resp.json()["total"] == 3300
 
 
 async def test_unknown_hotel_rejected(client: AsyncClient):
@@ -234,7 +237,7 @@ async def test_price_uniform_across_hotels(client: AsyncClient):
     )
     assert resp_a.status_code == 201
     assert resp_b.status_code == 201
-    assert resp_a.json()["total"] == resp_b.json()["total"] == 4000
+    assert resp_a.json()["total"] == resp_b.json()["total"] == 4300  # 4000 + доставка 300
 
 
 async def test_create_order_unknown_product_is_404(client: AsyncClient):
@@ -326,7 +329,9 @@ async def test_create_order_applies_percent_promo(client: AsyncClient):
     )
     assert resp.status_code == 201
     # subtotal = 4000, скидка 10% = 400
-    assert resp.json()["total"] == 3600
+    assert resp.json()["discount"] == 400
+    # + 300 доставки: бесплатная — от 5000 по сумме товаров
+    assert resp.json()["total"] == 3900
 
 
 async def test_create_order_increments_promo_used_count(client: AsyncClient):

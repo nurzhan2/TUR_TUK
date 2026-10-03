@@ -13,13 +13,12 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
 from app.core.deps import require_role
 from app.core.rbac import ADMIN_ROLES
 from app.db.session import get_session
 from app.models.product import Product
 from app.schemas.product import ProductOut
-from app.services.storage import build_key, upload_file, validate_image_type
+from app.services.storage import store_image
 
 router = APIRouter(
     prefix="/api/admin",
@@ -45,11 +44,7 @@ async def upload_product_photo(
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="товар не найден")
 
-    validate_image_type(file)
-    key = build_key("products", str(product_id), content_type=file.content_type)
-    url = await upload_file(file, get_settings().s3_bucket, key)
-
-    product.photo_url = url
+    product.photo_url = await store_image(file, "products", str(product_id))
     await session.commit()
     await session.refresh(product)
     return product

@@ -17,11 +17,14 @@ from collections.abc import AsyncIterator
 # обязан быть детерминированным независимо от чужого мусора в окружении
 # машины, поэтому здесь, и только здесь, значение фиксируется явно на тот
 # же docker-compose-инстанс, что документирован в `.env.example`.
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://tur_tuk:tur_tuk@localhost:5433/tur_tuk"
+os.environ["DATABASE_URL"] = os.environ.get(
+    "TEST_DATABASE_URL", "postgresql+asyncpg://tur_tuk:tur_tuk@localhost:5433/tur_tuk"
+)
+os.environ.setdefault("MEDIA_DIR", os.path.join(os.path.dirname(__file__), ".media"))
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import delete
+from sqlalchemy import delete, text
 
 from app.core.sms import SmsProvider
 from app.db.session import async_session_factory
@@ -63,9 +66,48 @@ async def client(fake_sms: FakeSmsProvider) -> AsyncIterator[AsyncClient]:
 @pytest_asyncio.fixture(autouse=True)
 async def _cleanup_test_phones() -> AsyncIterator[None]:
     yield
+    await cleanup_test_users()
+
+
+# Таблицы, ссылающиеся на users/orders, — читаются из схемы один раз, чтобы
+# уборка не ломалась от новой таблицы с внешним ключом.
+_FK_CACHE: dict[str, list[tuple[str, str]]] = {}
+
+_FK_SQL = text(
+    """
+    select tc.table_name, kcu.column_name
+    from information_schema.table_constraints tc
+    join information_schema.key_column_usage kcu
+      on tc.constraint_name = kcu.constraint_name and tc.table_schema = kcu.table_schema
+    join information_schema.constraint_column_usage ccu
+      on tc.constraint_name = ccu.constraint_name and tc.table_schema = ccu.table_schema
+    where tc.constraint_type = 'FOREIGN KEY' and ccu.table_name = :target
+    """
+)
+
+
+async def _refs(session, target: str) -> list[tuple[str, str]]:
+    if target not in _FK_CACHE:
+        rows = (await session.execute(_FK_SQL, {"target": target})).all()
+        _FK_CACHE[target] = [(t, c) for t, c in rows if t != target]
+    return _FK_CACHE[target]
+
+
+async def cleanup_test_users(prefix: str = TEST_PHONE_PREFIX) -> None:
+    """Удаляет тестовых пользователей вместе со всем, что на них ссылается:
+    заказы (и их позиции, платежи, историю), корзины, сообщения, трек."""
+    users = f"(select id from users where phone like '{prefix}%')"
+    orders = f"(select id from orders where user_id in {users} or courier_id in {users})"
     async with async_session_factory() as session:
+        for table, column in await _refs(session, "orders"):
+            await session.execute(text(f"delete from {table} where {column} in {orders}"))
+        await session.execute(text(f"delete from orders where id in {orders}"))
+        for table, column in await _refs(session, "users"):
+            if table == "orders":
+                continue
+            await session.execute(text(f"delete from {table} where {column} in {users}"))
         await session.execute(
-            delete(SmsVerificationCode).where(SmsVerificationCode.phone.like(f"{TEST_PHONE_PREFIX}%"))
+            delete(SmsVerificationCode).where(SmsVerificationCode.phone.like(f"{prefix}%"))
         )
-        await session.execute(delete(User).where(User.phone.like(f"{TEST_PHONE_PREFIX}%")))
+        await session.execute(delete(User).where(User.phone.like(f"{prefix}%")))
         await session.commit()

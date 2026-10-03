@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -15,6 +16,8 @@ class OrderCreate(BaseModel):
     room_number: str = Field(min_length=1)
     items: list[OrderItemIn] = Field(min_length=1)
     promo_code: str | None = None
+    # Выбор гостя на чекауте; передаётся в ЮKassa при создании платежа.
+    payment_method: Literal["card", "sbp"] | None = None
 
 
 class OrderStatusUpdate(BaseModel):
@@ -29,6 +32,10 @@ class OrderOut(BaseModel):
     courier_id: int | None
     status: OrderStatus
     total: float
+    subtotal: float | None = None
+    discount: float = 0
+    delivery_fee: float = 0
+    payment_method: str | None = None
     hotel_name: str
     room_number: str
     delivery_photo_url: str | None

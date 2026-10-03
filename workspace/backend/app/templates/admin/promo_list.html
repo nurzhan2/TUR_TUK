@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+{% block title %}Промокоды{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Промокоды</h1><div class="sub">Гость вводит код в корзине, скидка считается на сервере</div></div>
+  <a class="btn" href="/admin/promo/new">+ Новый промокод</a>
+</div>
+<div class="card">
+  {% if promos %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Код</th><th>Скидка</th><th>Действует до</th><th>Использован</th><th>Активен</th><th></th></tr></thead>
+    <tbody>
+    {% for p in promos %}
+      {% set expired = p.valid_until and p.valid_until < now %}
+      <tr>
+        <td><a href="/admin/promo/{{ p.id }}/edit"><b>{{ p.code }}</b></a>{% if p.title %}<div class="muted">{{ p.title }}</div>{% endif %}</td>
+        <td>{% if p.discount_percent %}{{ '%g'|format(p.discount_percent) }}%{% else %}{{ p.discount_amount|money }}{% endif %}</td>
+        <td>{% if p.valid_until %}{{ p.valid_until.strftime('%d.%m.%Y') }}{% if expired %} <span class="pill bad">истёк</span>{% endif %}{% else %}<span class="muted">без срока</span>{% endif %}</td>
+        <td>{{ p.used_count }}{% if p.max_uses %} из {{ p.max_uses }}{% endif %}</td>
+        <td>
+          <form method="post" action="/admin/promo/{{ p.id }}/toggle" class="inline">
+            <label class="switch"><input type="checkbox" {{ 'checked' if p.is_active }} onchange="this.form.submit()"></label>
+          </form>
+        </td>
+        <td class="right"><a class="btn ghost sm" href="/admin/promo/{{ p.id }}/edit">Изменить</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="empty-state">Промокодов пока нет. <a href="/admin/promo/new">Создать первый</a></div>
+  {% endif %}
+</div>
+{% endblock %}

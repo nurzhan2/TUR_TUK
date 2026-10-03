@@ -1,93 +1,105 @@
 {% extends "admin/base.html" %}
-{% block title %}Заказ №{{ order.id }} — TUR TUK админка{% endblock %}
+{% block title %}Заказ #{{ order.id }}{% endblock %}
 {% block content %}
-<style>
-    .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
-    table.items-table, table.history-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    table.items-table th, table.items-table td,
-    table.history-table th, table.history-table td {
-        text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 14px;
-    }
-    .field { margin: 10px 0; }
-    .field .label { color: var(--muted); font-size: 12px; }
-    form.inline { margin-top: 8px; display: flex; gap: 8px; align-items: center; }
-    form.inline select { margin: 0; width: auto; }
-    h2.section { font-size: 15px; margin-bottom: 4px; }
-</style>
+<div class="head">
+  <div>
+    <a href="/admin/orders" class="muted">← Заказы</a>
+    <h1>Заказ #{{ order.id }} <span class="pill s-{{ order.status.value }}" style="vertical-align:middle">{{ status_labels[order.status.value] }}</span></h1>
+    <div class="sub">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+  </div>
+</div>
 
-<p><a href="/admin/orders">&larr; К списку заказов</a></p>
-
-<div class="detail-grid">
+<div class="grid g3" style="align-items:start">
+  <div style="grid-column:span 2">
     <div class="card">
-        <h1 style="font-size:18px; margin-top:0;">Заказ №{{ order.id }}</h1>
-
-        <div class="field"><span class="label">Статус</span><br>{{ status_labels.get(order.status.value, order.status.value) }}</div>
-        <div class="field"><span class="label">Клиент</span><br>{{ client.name or "—" }}, {{ client.phone }}</div>
-        <div class="field"><span class="label">Отель / номер</span><br>{{ order.hotel_name }}, {{ order.room_number }}</div>
-        <div class="field"><span class="label">Курьер</span><br>{{ (courier.name or courier.phone) if courier else "не назначен" }}</div>
-        <div class="field"><span class="label">Сумма</span><br>{{ "%.2f"|format(order.total|float) }} ₽</div>
-        <div class="field"><span class="label">Оплата</span><br>{{ order.payment_status.value }}</div>
-        <div class="field"><span class="label">Создан</span><br>{{ order.created_at.strftime("%d.%m.%Y %H:%M") }}</div>
-
-        <h2 class="section">Товары</h2>
-        <table class="items-table">
-            <thead><tr><th>Товар</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead>
-            <tbody>
-                {% for item in order.items %}
-                <tr>
-                    <td>{{ item.product.name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ "%.2f"|format(item.price|float) }} ₽</td>
-                    <td>{{ "%.2f"|format((item.price|float) * item.quantity) }} ₽</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4" class="muted">В заказе нет позиций.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <h2 class="section">История статусов</h2>
-        <table class="history-table">
-            <thead><tr><th>Когда</th><th>Из</th><th>В</th><th>Кто</th></tr></thead>
-            <tbody>
-                {% for log, changer in log_rows %}
-                <tr>
-                    <td>{{ log.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
-                    <td>{{ status_labels.get(log.from_status.value, log.from_status.value) }}</td>
-                    <td>{{ status_labels.get(log.to_status.value, log.to_status.value) }}</td>
-                    <td>{{ changer.name or changer.phone }}</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4" class="muted">Изменений статуса ещё не было.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <h2>Состав</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Товар</th><th class="right">Кол-во</th><th class="right">Цена</th><th class="right">Сумма</th></tr></thead>
+        <tbody>
+        {% for item in order.items %}
+          <tr>
+            <td>{{ item.product.name }}</td>
+            <td class="right">{{ item.quantity }}</td>
+            <td class="right">{{ item.price|money }}</td>
+            <td class="right">{{ (item.price * item.quantity)|money }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <div style="margin-top:14px;display:grid;gap:4px;justify-content:end;text-align:right">
+        {% if order.subtotal is not none %}<div class="muted">Товары: {{ order.subtotal|money }}</div>{% endif %}
+        {% if order.discount and order.discount > 0 %}<div class="muted">Скидка: −{{ order.discount|money }}</div>{% endif %}
+        <div class="muted">Доставка: {{ order.delivery_fee|money if order.delivery_fee and order.delivery_fee > 0 else 'бесплатно' }}</div>
+        <div style="font-size:18px;font-weight:700">Итого: {{ order.total|money }}</div>
+      </div>
     </div>
 
     <div class="card">
-        <h2 class="section" style="margin-top:0;">Сменить статус вручную</h2>
-        <form class="inline" method="post" action="/admin/orders/{{ order.id }}/status">
-            <select name="status">
-                {% for value, label in statuses %}
-                <option value="{{ value }}" {% if value == order.status.value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit">Сохранить</button>
-        </form>
-
-        <h2 class="section">Назначить курьера</h2>
-        {% if couriers %}
-        <form class="inline" method="post" action="/admin/orders/{{ order.id }}/assign-courier">
-            <select name="courier_id">
-                {% for c in couriers %}
-                <option value="{{ c.id }}" {% if courier and c.id == courier.id %}selected{% endif %}>{{ c.name or c.phone }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit">Назначить</button>
-        </form>
-        {% else %}
-        <p class="muted">Курьеров пока нет.</p>
-        {% endif %}
+      <h2>История статусов</h2>
+      {% if log_rows %}
+      <div class="table-wrap"><table>
+        <tbody>
+        {% for log, who in log_rows %}
+          <tr>
+            <td class="muted">{{ log.created_at.strftime('%d.%m %H:%M') }}</td>
+            <td>{{ status_labels.get(log.from_status.value if log.from_status else '', '—') }} → <b>{{ status_labels[log.to_status.value] }}</b></td>
+            <td class="right muted">{{ who.name or who.phone }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% else %}<div class="muted">Статус не менялся</div>{% endif %}
     </div>
+
+    {% if order.delivery_photo_url %}
+    <div class="card">
+      <h2>Фото доставки</h2>
+      <a href="{{ order.delivery_photo_url }}" target="_blank"><img src="{{ order.delivery_photo_url }}" alt="Фото коробки" style="max-width:100%;max-height:360px;border-radius:12px"></a>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Гость</h2>
+      <div><b>{{ client.name or '—' }}</b></div>
+      <div><a href="tel:{{ client.phone }}">{{ client.phone }}</a></div>
+      <div style="margin-top:10px">{{ order.hotel_name }}</div>
+      <div class="muted">Номер {{ order.room_number }}</div>
+      <div style="margin-top:10px">
+        {% if order.payment_status.value == 'paid' %}<span class="pill ok">Оплачен</span>{% elif order.payment_status.value == 'failed' %}<span class="pill bad">Ошибка оплаты</span>{% else %}<span class="pill">Не оплачен</span>{% endif %}
+        {% if order.payment_method %}<span class="pill">{{ 'Карта' if order.payment_method == 'card' else 'СБП' }}</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Статус</h2>
+      <form method="post" action="/admin/orders/{{ order.id }}/status" class="row">
+        <select name="status" style="flex:1">
+          {% for value, label in statuses %}
+          <option value="{{ value }}" {{ 'selected' if order.status.value == value }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn" type="submit">Сменить</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Курьер</h2>
+      <p style="margin-top:0">{{ (courier.name or courier.phone) if courier else 'Не назначен' }}</p>
+      {% if couriers %}
+      <form method="post" action="/admin/orders/{{ order.id }}/assign-courier" class="row">
+        <select name="courier_id" style="flex:1">
+          {% for c in couriers %}
+          <option value="{{ c.id }}" {{ 'selected' if courier and courier.id == c.id }}>{{ c.name or c.phone }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn" type="submit">Назначить</button>
+      </form>
+      {% else %}
+      <a href="/admin/staff">Добавить курьера →</a>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -24,11 +24,10 @@ def _create_token(subject: str, token_type: TokenType, expires_delta: timedelta)
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, *, expires_minutes: int | None = None) -> str:
     settings = get_settings()
-    return _create_token(
-        str(user_id), "access", timedelta(minutes=settings.jwt_access_token_expire_minutes)
-    )
+    minutes = expires_minutes or settings.jwt_access_token_expire_minutes
+    return _create_token(str(user_id), "access", timedelta(minutes=minutes))
 
 
 def create_refresh_token(user_id: int) -> str:

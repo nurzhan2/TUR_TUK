@@ -1,97 +1,157 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}TUR TUK — админка{% endblock %}</title>
-    <style>
-        :root {
-            --bordo: #7a1f34;
-            --bordo-dark: #5c1727;
-            --bg: #f7f5f4;
-            --card: #ffffff;
-            --border: #e4dedd;
-            --text: #262121;
-            --muted: #7a7170;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-        header.topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            height: 56px;
-            background: var(--bordo);
-            color: #fff;
-        }
-        header.topbar .brand { font-weight: 600; letter-spacing: .02em; }
-        .layout { display: flex; min-height: calc(100vh - 56px); }
-        nav.sidebar {
-            width: 220px;
-            flex-shrink: 0;
-            background: var(--card);
-            border-right: 1px solid var(--border);
-            padding: 16px 0;
-        }
-        nav.sidebar a {
-            display: block;
-            padding: 10px 24px;
-            color: var(--text);
-            text-decoration: none;
-            font-size: 14px;
-        }
-        nav.sidebar a:hover { background: var(--bg); color: var(--bordo); }
-        main.content { flex: 1; padding: 24px; }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-        }
-        .muted { color: var(--muted); }
-        a.button, button {
-            background: var(--bordo);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 16px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        a.button:hover, button:hover { background: var(--bordo-dark); }
-        .error { color: var(--bordo-dark); margin: 8px 0; }
-        input {
-            display: block;
-            width: 100%;
-            padding: 8px 10px;
-            margin: 6px 0 14px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Админка{% endblock %} · TUR TUK</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%238B0000'/><text x='32' y='42' font-size='26' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'>TT</text></svg>">
+<style>
+:root{
+  --accent:#8B0000;--accent-2:#a8162b;--accent-soft:#fbeeee;
+  --bg:#f6f4f3;--card:#fff;--line:#ebe5e3;--text:#1f1a1a;--muted:#7b7270;
+  --ok:#1d7a46;--ok-soft:#e7f5ec;--warn:#9a6200;--warn-soft:#fff4dc;--bad:#b3261e;--bad-soft:#fdecea;
+  --radius:16px;--shadow:0 1px 2px rgba(30,10,10,.04),0 8px 24px rgba(30,10,10,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:14px/1.5 -apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+.app{display:flex;min-height:100vh}
+.side{width:236px;flex-shrink:0;background:#1d1414;color:#f3eaea;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;font-weight:700;letter-spacing:.02em;font-size:16px;color:#fff}
+.logo i{width:34px;height:34px;border-radius:11px;background:var(--accent);display:grid;place-items:center;font-style:normal;font-size:13px}
+.nav{padding:6px 10px;flex:1;overflow:auto}
+.nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:2px 0;border-radius:12px;color:#d9cccc;transition:background .18s,color .18s,transform .18s}
+.nav a:hover{background:rgba(255,255,255,.07);color:#fff;transform:translateX(2px)}
+.nav a.on{background:var(--accent);color:#fff}
+.nav svg{width:18px;height:18px;flex-shrink:0}
+.me{padding:14px 20px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:13px;color:#bfaeae}
+.me b{display:block;color:#fff;font-weight:600}
+.me form{margin-top:8px}
+.me button{background:none;border:0;color:#e9a3a3;padding:0;cursor:pointer;font:inherit}
+.main{flex:1;min-width:0;padding:28px 32px 60px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.head h1{font-size:24px;margin:0;font-weight:700;letter-spacing:-.01em}
+.head .sub{color:var(--muted);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.card+.card{margin-top:16px}
+.card h2{font-size:16px;margin:0 0 14px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stat{padding:18px 20px}
+.stat .k{color:var(--muted);font-size:13px}
+.stat .v{font-size:26px;font-weight:700;margin-top:4px;letter-spacing:-.02em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;border:1px solid transparent;background:var(--accent);color:#fff;font:600 14px/1 inherit;cursor:pointer;transition:transform .15s,box-shadow .2s,background .2s;white-space:nowrap}
+.btn:hover{background:var(--accent-2);box-shadow:0 6px 16px rgba(139,0,0,.25);transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn.ghost{background:#fff;color:var(--text);border-color:var(--line)}
+.btn.ghost:hover{background:#faf7f6;box-shadow:none}
+.btn.danger{background:#fff;color:var(--bad);border-color:#f2cfcc}
+.btn.danger:hover{background:var(--bad-soft);box-shadow:none}
+.btn.sm{height:32px;padding:0 13px;font-size:13px}
+.btn svg{width:16px;height:16px}
+.inline{display:inline}
+label{display:block;font-weight:600;font-size:13px;margin:0 0 6px}
+.hint{color:var(--muted);font-size:12px;font-weight:400;margin-top:4px}
+input[type=text],input[type=number],input[type=tel],input[type=password],input[type=email],input[type=url],input[type=date],input[type=search],select,textarea{width:100%;height:42px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;color:inherit;transition:border .15s,box-shadow .15s}
+textarea{height:auto;padding:10px 14px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 4px rgba(139,0,0,.1)}
+input[type=color]{width:56px;height:42px;padding:4px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer}
+.field{margin-bottom:16px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:500;user-select:none}
+.switch input{appearance:none;width:42px;height:24px;border-radius:999px;background:#d9d0ce;position:relative;cursor:pointer;transition:background .2s;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.switch input:checked{background:var(--ok)}
+.switch input:checked::after{transform:translateX(18px)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:#fcfaf9}
+.table-wrap{overflow-x:auto;margin:-6px -10px}
+.thumb{width:48px;height:48px;border-radius:12px;object-fit:cover;background:#f1ecea;display:block}
+.thumb.empty{display:grid;place-items:center;color:#b9aeac;font-size:11px}
+.pill{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;background:#f1ecea;color:#5e5452}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.s-created{background:#e8f0fe;color:#1a56c4}.s-accepted{background:#efe8fd;color:#6a35c9}.s-assembling{background:var(--warn-soft);color:var(--warn)}.s-delivering{background:#e3f4f7;color:#0b7285}.s-delivered{background:var(--ok-soft);color:var(--ok)}.s-cancelled{background:var(--bad-soft);color:var(--bad)}
+.muted{color:var(--muted)}
+.right{text-align:right}
+.actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.empty-state{text-align:center;padding:40px 10px;color:var(--muted)}
+.alert{padding:12px 16px;border-radius:12px;margin-bottom:16px;font-weight:500}
+.alert.bad{background:var(--bad-soft);color:var(--bad)}.alert.info{background:#eef3fb;color:#24508f}
+.toast{position:fixed;right:24px;bottom:24px;background:#1d1414;color:#fff;padding:12px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;animation:toast 3.2s ease forwards;z-index:50}
+.toast::before{content:"✓";width:22px;height:22px;border-radius:50%;background:var(--ok);display:grid;place-items:center;font-size:12px}
+@keyframes toast{0%{opacity:0;transform:translateY(16px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0;transform:translateY(8px);visibility:hidden}}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.filters input,.filters select{width:auto;min-width:160px}
+.tabs{display:inline-flex;background:#ece6e4;border-radius:999px;padding:3px}
+.tabs a{padding:6px 14px;border-radius:999px;color:#5e5452;font-weight:600;font-size:13px;transition:background .15s}
+.tabs a.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.fade{animation:fade .35s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.burger{display:none}
+@media (max-width:900px){
+  .g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .side{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s;z-index:40;height:100%}
+  .side.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.3)}
+  .main{padding:72px 16px 40px}
+  .burger{display:flex;position:fixed;top:12px;left:12px;z-index:41;width:44px;height:44px;border-radius:50%;background:#1d1414;color:#fff;border:0;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+}
+@media (max-width:560px){.g2,.g3,.g4{grid-template-columns:1fr}.card{padding:16px}}
+</style>
+{% block head %}{% endblock %}
 </head>
 <body>
-    <header class="topbar">
-        <span class="brand">TUR TUK — админка</span>
-    </header>
-    <div class="layout">
-        {% block nav %}
-        <nav class="sidebar">
-            {% for label, href in nav_items|default([]) %}
-            <a href="{{ href }}">{{ label }}</a>
-            {% endfor %}
-        </nav>
-        {% endblock %}
-        <main class="content">
-            {% block content %}{% endblock %}
-        </main>
+{% macro icon(name) -%}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+{%- if name == 'home' %}<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>
+{%- elif name == 'orders' %}<path d="M6 3h12l1 4H5z"/><path d="M5 7v13h14V7"/><path d="M9 11h6M9 15h4"/>
+{%- elif name == 'box' %}<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>
+{%- elif name == 'grid' %}<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
+{%- elif name == 'hotel' %}<path d="M4 21V5a2 2 0 012-2h8a2 2 0 012 2v16"/><path d="M16 9h3a1 1 0 011 1v11"/><path d="M8 7h4M8 11h4M8 15h4"/><path d="M2 21h20"/>
+{%- elif name == 'tag' %}<path d="M3 12V4a1 1 0 011-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/>
+{%- elif name == 'gear' %}<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>
+{%- elif name == 'users' %}<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14a6.5 6.5 0 013.5 6"/>
+{%- elif name == 'plus' %}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'menu' %}<path d="M4 7h16M4 12h16M4 17h16"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+{% if admin %}
+<button class="burger" type="button" onclick="document.querySelector('.side').classList.toggle('open')" aria-label="Меню">{{ icon('menu') }}</button>
+{% endif %}
+<div class="app">
+  {% if admin %}
+  <aside class="side">
+    <div class="logo"><i>TT</i>TUR TUK</div>
+    <nav class="nav">
+      {% for label, href, ic in nav_items %}
+      <a href="{{ href }}" class="{{ 'on' if active == href else '' }}">{{ icon(ic) }}{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <div class="me">
+      <b>{{ admin.name or admin.phone }}</b>{{ admin.phone }}
+      <form method="post" action="/admin/logout"><button type="submit">Выйти</button></form>
     </div>
+  </aside>
+  {% endif %}
+  <main class="main fade">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% if flash %}<div class="toast">{{ flash }}</div>{% endif %}
+<script>
+document.addEventListener('submit',function(e){
+  var f=e.target, msg=f.getAttribute('data-confirm');
+  if(msg && !confirm(msg)){e.preventDefault();return}
+  var b=f.querySelector('button[type=submit],button:not([type])');
+  if(b){setTimeout(function(){b.disabled=true;b.style.opacity=.6},0)}
+});
+if(location.search.indexOf('ok=')>-1){history.replaceState(null,'',location.pathname+location.search.replace(/[?&]ok=[^&]*/,'').replace(/^&/,'?'))}
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

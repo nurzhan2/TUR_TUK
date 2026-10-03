@@ -19,3 +19,7 @@ __pycache__/
 # Прочее
 *.log
 _git_empty_backup/
+
+workspace/backend/media/
+workspace/backend/tests/.media/
+workspace/backend/.env
