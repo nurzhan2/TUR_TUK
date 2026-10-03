@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:web_socket_channel/web_socket_channel.dart';
+
+import '../core/content/app_content.dart';
 import '../core/demo/demo_data.dart';
 import '../core/demo/demo_state.dart';
 import '../core/network/api_client.dart';
+import '../core/network/api_config.dart';
 import '../models/order.dart';
 import 'catalog_repository.dart' show kDemoLatency;
 
@@ -123,7 +128,107 @@ class ApiOrdersRepository implements OrdersRepository {
   @override
   Future<Order> byId(int id) async {
     final body = await _api.get('/orders/$id') as Map<String, dynamic>;
-    return Order.fromJson(body);
+    return _withHotelPoint(Order.fromJson(body));
+  }
+
+  /// Координат отеля в ответе заказа нет — берём из справочника отелей
+  /// (админка), иначе карта трекинга центрировалась бы на точке 0,0.
+  Order _withHotelPoint(Order order) {
+    if (order.hotelLat != 0 || order.hotelLng != 0) return order;
+    final hotel = AppContent.instance.hotelByName(order.hotelName);
+    if (hotel == null || (hotel.lat == 0 && hotel.lng == 0)) return order;
+    return order.copyWith(hotelLat: hotel.lat, hotelLng: hotel.lng);
+  }
+
+  /// Трекинг: статус — опросом раз в 10 с (статусы меняются редко), а
+  /// позиция курьера — по WebSocket `/ws/courier-location/{id}` в реальном
+  /// времени: курьерское приложение шлёт точку каждые ~5 с / 10 м.
+  /// Сокет переподключается сам; при подключении сервер сразу присылает
+  /// последнюю известную точку, так что карта не пустая после обрыва.
+  @override
+  Stream<Order> track(int id) {
+    late final StreamController<Order> controller;
+    Order? current;
+    Timer? poll;
+    Timer? reconnect;
+    WebSocketChannel? socket;
+    var closed = false;
+
+    void emit(Order order) {
+      current = order;
+      if (!controller.isClosed) controller.add(order);
+    }
+
+    Future<void> close() async {
+      closed = true;
+      poll?.cancel();
+      reconnect?.cancel();
+      await socket?.sink.close();
+      if (!controller.isClosed) await controller.close();
+    }
+
+    Future<void> refresh() async {
+      try {
+        final fresh = await byId(id);
+        final prev = current;
+        // Статус — с сервера, координаты курьера — последние из сокета.
+        emit(prev == null || prev.courierLat == 0
+            ? fresh
+            : fresh.copyWith(courierLat: prev.courierLat, courierLng: prev.courierLng));
+        if (fresh.status.isFinal) await close();
+      } catch (_) {
+        // Сеть пропала — следующий опрос попробует снова.
+      }
+    }
+
+    void connect() {
+      final token = _api.accessToken;
+      if (closed || token == null) return;
+      final base = Uri.parse(ApiConfig.baseUrl);
+      final uri = base.replace(
+        scheme: base.scheme == 'https' ? 'wss' : 'ws',
+        path: '/ws/courier-location/$id',
+        queryParameters: {'token': token},
+      );
+      void retry() {
+        if (closed || reconnect != null) return;
+        reconnect = Timer(const Duration(seconds: 5), () {
+          reconnect = null;
+          connect();
+        });
+      }
+
+      try {
+        final ws = WebSocketChannel.connect(uri);
+        socket = ws;
+        ws.stream.listen(
+          (raw) {
+            final data = jsonDecode(raw as String) as Map<String, dynamic>;
+            final lat = (data['lat'] as num?)?.toDouble();
+            final lon = (data['lon'] as num?)?.toDouble();
+            final order = current;
+            if (lat == null || lon == null || order == null) return;
+            emit(order.copyWith(courierLat: lat, courierLng: lon));
+          },
+          onDone: retry,
+          onError: (Object _) => retry(),
+          cancelOnError: true,
+        );
+      } catch (_) {
+        retry();
+      }
+    }
+
+    controller = StreamController<Order>(
+      onListen: () async {
+        await refresh();
+        if (closed) return;
+        poll = Timer.periodic(pollInterval, (_) => refresh());
+        connect();
+      },
+      onCancel: close,
+    );
+    return controller.stream;
   }
 
   @override
@@ -162,15 +267,5 @@ class ApiOrdersRepository implements OrdersRepository {
     // `RepeatOrderOut` — это обёртка: сам заказ лежит в поле `order`,
     // рядом с ним `skipped_items` и `warning` про недоступные товары.
     return Order.fromJson(body['order'] as Map<String, dynamic>);
-  }
-
-  @override
-  Stream<Order> track(int id) async* {
-    while (true) {
-      final order = await byId(id);
-      yield order;
-      if (order.status.isFinal) return;
-      await Future<void>.delayed(pollInterval);
-    }
   }
 }

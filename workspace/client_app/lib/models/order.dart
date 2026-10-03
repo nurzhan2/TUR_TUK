@@ -108,6 +108,8 @@ class Order {
     double? courierLat,
     double? courierLng,
     String? courierName,
+    double? hotelLat,
+    double? hotelLng,
   }) {
     return Order(
       id: id,
@@ -122,8 +124,8 @@ class Order {
       courierName: courierName ?? this.courierName,
       promoCode: promoCode,
       deliveryPhotoAsset: deliveryPhotoAsset,
-      hotelLat: hotelLat,
-      hotelLng: hotelLng,
+      hotelLat: hotelLat ?? this.hotelLat,
+      hotelLng: hotelLng ?? this.hotelLng,
       courierLat: courierLat ?? this.courierLat,
       courierLng: courierLng ?? this.courierLng,
     );

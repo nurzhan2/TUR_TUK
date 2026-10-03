@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../core/demo/demo_state.dart';
 import '../core/network/api_client.dart';
+import '../core/network/api_config.dart';
 import '../models/chat_message.dart';
 import 'catalog_repository.dart' show kDemoLatency;
 
@@ -52,44 +56,100 @@ class DemoChatRepository implements ChatRepository {
 
 /// Боевой чат.
 ///
-/// ДВА ИЗВЕСТНЫХ ПРОБЕЛА, и оба — свойства бэкенда, а не недоделки здесь.
+/// Чат на сервере привязан к ЗАКАЗУ (`app/routers/chat.py`), а экран —
+/// общая переписка с поддержкой. Поэтому, если заказ не передан, берётся
+/// последний заказ гостя; заказов нет — понятная подсказка с контактами.
 ///
-/// Первое: чат на сервере привязан к ЗАКАЗУ (`GET /chat/{order_id}/messages`
-/// в `app/routers/chat.py`), а контракт экрана — общая переписка с
-/// поддержкой. Поэтому репозиторий берёт номер заказа снаружи: экран знает,
-/// про какой заказ спрашивают.
-///
-/// Второе: отправка и входящие идут ТОЛЬКО по WebSocket (`/ws/chat/{id}`),
-/// REST-эндпоинта на запись нет, а `web_socket_channel` в зависимостях
-/// не значится. Пока его не добавили, `send` отказывает с текстом, а
-/// `incoming` пуст: подделка вместо живых сообщений хуже, чем их
-/// отсутствие. Демо-режима это не касается.
+/// Отправка и входящие идут по WebSocket (`/ws/chat/{id}`), история — REST.
 class ApiChatRepository implements ChatRepository {
-  ApiChatRepository(this._api, {this.orderId});
+  ApiChatRepository(this._api, {int? orderId}) : _orderId = orderId; // ignore: prefer_initializing_formals
 
   final ApiClient _api;
 
-  /// Заказ, к чату которого подключаемся. `null` — заказа ещё нет, и
-  /// спрашивать нечего.
-  final int? orderId;
+  /// Чат на сервере привязан к заказу (`/ws/chat/{order_id}`). Не передан —
+  /// берётся последний заказ гостя: вопрос «где мой заказ» почти всегда
+  /// про него.
+  int? _orderId;
+  int? _userId;
+  WebSocketChannel? _socket;
+  final StreamController<ChatMessage> _raw = StreamController.broadcast();
+
+  Future<int> _resolveOrder() async {
+    final known = _orderId;
+    if (known != null) return known;
+    final orders = await _api.get('/orders/history') as List;
+    if (orders.isEmpty) {
+      throw ApiException(
+        409,
+        'Чат с поддержкой открывается после первого заказа. '
+        'Контакты поддержки — в профиле, раздел «О приложении».',
+      );
+    }
+    // История отсортирована сервером от новых к старым.
+    return _orderId = (orders.first as Map<String, dynamic>)['id'] as int;
+  }
+
+  Future<int?> _currentUserId() async {
+    if (_userId != null) return _userId;
+    try {
+      final me = await _api.get('/auth/me') as Map<String, dynamic>;
+      return _userId = me['id'] as int?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<WebSocketChannel> _connect() async {
+    final existing = _socket;
+    if (existing != null) return existing;
+    final orderId = await _resolveOrder();
+    final userId = await _currentUserId();
+    final base = Uri.parse(ApiConfig.baseUrl);
+    final socket = WebSocketChannel.connect(base.replace(
+      scheme: base.scheme == 'https' ? 'wss' : 'ws',
+      path: '/ws/chat/$orderId',
+      queryParameters: {'token': _api.accessToken ?? ''},
+    ));
+    _socket = socket;
+    socket.stream.listen(
+      (raw) {
+        final json = jsonDecode(raw as String) as Map<String, dynamic>;
+        _raw.add(ChatMessage.fromJson(json, currentUserId: userId));
+      },
+      // Обрыв — следующее сообщение откроет сокет заново.
+      onDone: () => _socket = null,
+      onError: (Object _) => _socket = null,
+    );
+    await socket.ready;
+    return socket;
+  }
 
   @override
   Future<List<ChatMessage>> history() async {
-    if (orderId == null) return const [];
+    final orderId = await _resolveOrder();
+    final userId = await _currentUserId();
     final body = await _api.get('/chat/$orderId/messages') as List;
+    // Сразу подписываемся: ответ поддержки придёт, даже если гость молчит.
+    unawaited(_connect().then((_) {}, onError: (Object _) {}));
     return [
-      for (final item in body) ChatMessage.fromJson(item as Map<String, dynamic>),
+      for (final item in body)
+        ChatMessage.fromJson(item as Map<String, dynamic>, currentUserId: userId),
     ];
   }
 
+  /// Сообщение уходит в сокет; возвращается то, что сервер сохранил и
+  /// разослал обратно, — с настоящим id и временем. Эхо своего сообщения
+  /// из [incoming] убрано, иначе оно появилось бы в ленте дважды.
   @override
   Future<ChatMessage> send(String text) async {
-    throw UnimplementedError(
-      'Отправка сообщения идёт по WebSocket /ws/chat/{order_id}; добавьте '
-      'web_socket_channel перед сборкой с --dart-define=DEMO=false',
-    );
+    final socket = await _connect();
+    final echo = _raw.stream
+        .firstWhere((m) => m.isMine && m.text == text)
+        .timeout(const Duration(seconds: 15));
+    socket.sink.add(jsonEncode({'body': text}));
+    return echo;
   }
 
   @override
-  Stream<ChatMessage> incoming() => const Stream<ChatMessage>.empty();
+  Stream<ChatMessage> incoming() => _raw.stream.where((m) => !m.isMine);
 }
