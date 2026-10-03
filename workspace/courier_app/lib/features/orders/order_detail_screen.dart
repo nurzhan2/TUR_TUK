@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/format.dart';
+import '../../core/location/location_tracker.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -47,6 +49,14 @@ class OrderDetailScreen extends StatelessWidget {
           24,
         ),
         children: [
+          if (order.status == OrderStatus.delivering &&
+              controller.trackingProblem != null) ...[
+            _TrackingProblemBanner(
+              problem: controller.trackingProblem!,
+              onRetry: () => controller.retryTracking(order.id),
+            ),
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               StatusPill(status: order.status),
@@ -415,6 +425,54 @@ class _Spinner extends StatelessWidget {
       height: 20,
       width: 20,
       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+    );
+  }
+}
+
+
+/// Трекинг не запустился — курьер должен это видеть: иначе клиент смотрит
+/// на пустую карту, а курьер уверен, что его ведут.
+class _TrackingProblemBanner extends StatelessWidget {
+  const _TrackingProblemBanner({required this.problem, required this.onRetry});
+
+  final TrackingProblem problem;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final (text, action) = switch (problem) {
+      TrackingProblem.serviceDisabled =>
+        ('Геолокация выключена — клиент не видит вас на карте.', 'Включить'),
+      TrackingProblem.permissionDenied =>
+        ('Нет доступа к геолокации — клиент не видит вас на карте.', 'Разрешить'),
+      TrackingProblem.permissionForever =>
+        ('Доступ к геолокации запрещён в настройках телефона.', 'Настройки'),
+    };
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.location_off_outlined, color: AppColors.warning),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
+          TextButton(
+            onPressed: () async {
+              if (problem == TrackingProblem.serviceDisabled) {
+                await Geolocator.openLocationSettings();
+              } else if (problem == TrackingProblem.permissionForever) {
+                await Geolocator.openAppSettings();
+              }
+              onRetry();
+            },
+            child: Text(action),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -66,5 +66,16 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Пока заказ в пути, клиент видит на карте, где курьер. Геолокация включается только на время доставки.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Чтобы клиент видел курьера на карте, даже когда экран телефона заблокирован. Геолокация выключается сразу после доставки.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Снимок коробки у двери подтверждает доставку заказа.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

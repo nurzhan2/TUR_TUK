@@ -1,7 +1,29 @@
+import 'dart:typed_data';
+
 import '../../core/demo/demo_mode.dart';
 import '../../core/demo/demo_state.dart';
 import '../../core/network/api_client.dart';
 import 'order_model.dart';
+
+/// Снимок коробки у двери/на рецепции. В демо — путь к ассету, в бою —
+/// байты JPEG с камеры (уже ужатые `image_picker` до ~1600 px).
+class DeliveryPhoto {
+  const DeliveryPhoto.asset(String this.asset)
+      : bytes = null,
+        filename = 'box.jpg',
+        mimeType = 'image/jpeg';
+
+  const DeliveryPhoto.bytes(
+    Uint8List this.bytes, {
+    this.filename = 'box.jpg',
+    this.mimeType = 'image/jpeg',
+  }) : asset = null;
+
+  final String? asset;
+  final Uint8List? bytes;
+  final String filename;
+  final String mimeType;
+}
 
 /// Заказы курьера. Реализаций две — демо и боевая, выбор стоит в [Di].
 ///
@@ -18,7 +40,7 @@ abstract class OrdersRepository {
   /// Следующая стадия рабочего процесса: сборка -> выехал -> доставлен.
   Future<Order> advance(int id);
 
-  Future<Order> confirmDelivery(int id, {required String photoAsset});
+  Future<Order> confirmDelivery(int id, {required DeliveryPhoto photo});
 }
 
 class DemoOrdersRepository implements OrdersRepository {
@@ -49,9 +71,9 @@ class DemoOrdersRepository implements OrdersRepository {
   }
 
   @override
-  Future<Order> confirmDelivery(int id, {required String photoAsset}) async {
+  Future<Order> confirmDelivery(int id, {required DeliveryPhoto photo}) async {
     await Future<void>.delayed(kDemoLatency);
-    return DemoState.instance.confirmDelivery(id, photoAsset: photoAsset);
+    return DemoState.instance.confirmDelivery(id, photoAsset: photo.asset ?? '');
   }
 }
 
@@ -93,18 +115,23 @@ class ApiOrdersRepository implements OrdersRepository {
     return _setStatus(id, next);
   }
 
-  /// ИЗВЕСТНЫЙ ПРОБЕЛ: снимок коробки здесь НЕ отправляется.
-  ///
-  /// Эндпоинт для него есть (`POST /orders/{id}/delivery-photo`), но он
-  /// принимает multipart, а [ApiClient] умеет только JSON; и главное —
-  /// снимать нечем: работы с камерой в приложении пока нет вовсе, а в демо
-  /// показывается заранее подготовленный ассет. Статус при этом переводится
-  /// честно, так что боевой сценарий курьера доходит до «доставлен» — без
-  /// фотографии. Подставлять сюда демо-ассет было бы хуже: заказ выглядел
-  /// бы подтверждённым снимком, которого никто не делал.
+  /// Сначала снимок, потом статус: если фото не загрузилось (нет сети в
+  /// подвале отеля), заказ НЕ становится доставленным — курьер повторит.
   @override
-  Future<Order> confirmDelivery(int id, {required String photoAsset}) =>
-      _setStatus(id, OrderStatus.delivered);
+  Future<Order> confirmDelivery(int id, {required DeliveryPhoto photo}) async {
+    final bytes = photo.bytes;
+    if (bytes == null) {
+      throw ApiException(422, 'нужен снимок коробки с камеры');
+    }
+    await _apiClient.upload(
+      '/orders/$id/delivery-photo',
+      field: 'file',
+      bytes: bytes,
+      filename: photo.filename,
+      contentType: photo.mimeType,
+    );
+    return _setStatus(id, OrderStatus.delivered);
+  }
 
   Future<Order> _setStatus(int id, OrderStatus status) async {
     final json = await _apiClient.patch(

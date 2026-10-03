@@ -1,6 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Сеть: API и WebSocket трекинга -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Геолокация курьера, пока заказ «в пути» -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Трекинг при заблокированном экране — foreground service с уведомлением -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Уведомление «Идёт доставка» и push о новых заказах (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Снимок коробки при доставке -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
-        android:label="courier_app"
+        android:label="TUR TUK Курьер"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

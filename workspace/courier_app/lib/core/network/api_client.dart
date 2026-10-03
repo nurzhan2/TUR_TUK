@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'api_config.dart';
 
@@ -83,6 +84,30 @@ class ApiClient {
       body: body == null ? null : jsonEncode(body),
     );
     return _decode(response);
+  }
+
+  /// Загрузка файла (фото коробки → `POST /orders/{id}/delivery-photo`).
+  /// Тип обязателен: сервер проверяет его по заголовку части и принимает
+  /// только JPEG/PNG/WebP.
+  Future<dynamic> upload(
+    String path, {
+    required String field,
+    required List<int> bytes,
+    required String filename,
+    required String contentType,
+  }) async {
+    final request = http.MultipartRequest('POST', _uri(path));
+    if (accessToken != null) {
+      request.headers['Authorization'] = 'Bearer $accessToken';
+    }
+    request.files.add(http.MultipartFile.fromBytes(
+      field,
+      bytes,
+      filename: filename,
+      contentType: MediaType.parse(contentType),
+    ));
+    final streamed = await _client.send(request);
+    return _decode(await http.Response.fromStream(streamed));
   }
 
   dynamic _decode(http.Response response) {

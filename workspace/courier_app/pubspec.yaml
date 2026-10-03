@@ -51,6 +51,10 @@ dependencies:
   # Передача точки в штатный навигатор телефона: своей прокладки маршрута
   # приложение не делает и делать не должно.
   url_launcher: ^6.3.2
+  geolocator: ^14.0.2
+  image_picker: ^1.2.3
+  web_socket_channel: ^3.0.3
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

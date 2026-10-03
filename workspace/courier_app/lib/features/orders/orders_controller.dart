@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/demo/demo_mode.dart';
+import '../../core/di.dart';
+import '../../core/location/location_tracker.dart';
 import '../../core/network/api_client.dart';
 import 'order_model.dart';
 import 'orders_repository.dart';
@@ -48,6 +51,13 @@ class OrdersController extends ChangeNotifier {
     try {
       orders = await _repository.fetchOrders();
       state = OrdersLoadState.loaded;
+      // Приложение перезапустили посреди доставки — трекинг продолжается.
+      for (final order in orders) {
+        if (order.status == OrderStatus.delivering) {
+          await _syncTracking(order);
+          break;
+        }
+      }
     } on ApiException catch (e) {
       errorMessage = e.detail;
       state = OrdersLoadState.error;
@@ -64,8 +74,35 @@ class OrdersController extends ChangeNotifier {
 
   Future<bool> advance(int id) => _act(id, () => _repository.advance(id));
 
-  Future<bool> confirmDelivery(int id, {required String photoAsset}) =>
-      _act(id, () => _repository.confirmDelivery(id, photoAsset: photoAsset));
+  Future<bool> confirmDelivery(int id, {required DeliveryPhoto photo}) =>
+      _act(id, () => _repository.confirmDelivery(id, photo: photo));
+
+  /// Почему не идёт трекинг (выключена геолокация, нет разрешения) —
+  /// экран заказа показывает это курьеру плашкой с подсказкой.
+  TrackingProblem? trackingProblem;
+
+  /// «В пути» — координаты уходят клиенту; доставлен/отменён — трекинг
+  /// выключается вместе с уведомлением «Идёт доставка».
+  Future<void> _syncTracking(Order order) async {
+    if (kDemoMode) return;
+    final tracker = LocationTracker.instance;
+    if (order.status == OrderStatus.delivering) {
+      final token = Di.api.accessToken;
+      if (token == null) return;
+      trackingProblem = await tracker.start(orderId: order.id, token: token);
+    } else if (tracker.activeOrderId == order.id) {
+      await tracker.stop();
+      trackingProblem = null;
+    }
+  }
+
+  /// Повторить запуск трекинга после того, как курьер включил геолокацию.
+  Future<void> retryTracking(int id) async {
+    final order = byId(id);
+    if (order == null) return;
+    await _syncTracking(order);
+    notifyListeners();
+  }
 
   /// Общий обвес действия: занятость по заказу, замена строки в списке,
   /// ошибка текстом для экрана.
@@ -83,6 +120,7 @@ class OrdersController extends ChangeNotifier {
         for (final order in orders)
           if (order.id == updated.id) updated else order,
       ];
+      await _syncTracking(updated);
       return true;
     } on ApiException catch (e) {
       errorMessage = e.detail;

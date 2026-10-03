@@ -1,12 +1,17 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/demo/demo_data.dart';
+import '../../core/demo/demo_mode.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'orders_controller.dart';
+import 'orders_repository.dart';
 
 /// Подтверждение доставки снимком коробки.
 ///
@@ -14,12 +19,9 @@ import 'orders_controller.dart';
 /// курьера, и оно требует снимка. Диалог с двумя кнопками закрывался бы
 /// случайным тапом, а заказ считался бы доставленным.
 ///
-/// Камеры в демо нет — по нажатию подставляется заранее подготовленный
-/// ассет, тот же, что клиентское приложение показывает в карточке
-/// доставленного заказа. Работа с настоящей камерой (`image_picker` плюс
-/// multipart-загрузка в `POST /orders/{id}/delivery-photo`) — отдельная
-/// задача; здесь важно, что порядок действий уже правильный: сначала
-/// снимок, потом подтверждение.
+/// Боевой режим: камера телефона (`image_picker`), снимок ужимается до
+/// 1600 px и уходит в `POST /orders/{id}/delivery-photo` ДО смены статуса.
+/// Демо: подставляется заранее подготовленный ассет — показ без камеры.
 class DeliveryConfirmScreen extends StatefulWidget {
   const DeliveryConfirmScreen({required this.orderId, super.key});
 
@@ -30,7 +32,37 @@ class DeliveryConfirmScreen extends StatefulWidget {
 }
 
 class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
-  String? _photo;
+  DeliveryPhoto? _photo;
+  bool _picking = false;
+
+  Future<void> _takePhoto() async {
+    if (kDemoMode) {
+      setState(() => _photo = const DeliveryPhoto.asset(DemoData.boxPhoto));
+      return;
+    }
+    setState(() => _picking = true);
+    try {
+      final shot = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 82,
+        preferredCameraDevice: CameraDevice.rear,
+      );
+      if (shot == null || !mounted) return;
+      final bytes = await shot.readAsBytes();
+      final mime = shot.mimeType ??
+          (shot.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg');
+      setState(() => _photo = DeliveryPhoto.bytes(bytes, filename: shot.name, mimeType: mime));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Камера недоступна. Разрешите доступ к камере в настройках телефона.'),
+      ));
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,13 +106,22 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                 ? _PhotoPlaceholder(hint: l10n.deliveryHint)
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(AppSizes.radius),
-                    child: Image.asset(photo, fit: BoxFit.cover),
+                    child: _PhotoPreview(photo: photo),
                   ),
           ),
           const SizedBox(height: 20),
+          if (controller.errorMessage != null && photo != null) ...[
+            Text(
+              controller.errorMessage == 'network_error'
+                  ? 'Нет связи — снимок не отправлен. Попробуйте ещё раз.'
+                  : controller.errorMessage!,
+              style: const TextStyle(color: AppColors.error),
+            ),
+            const SizedBox(height: 12),
+          ],
           if (photo == null)
             ElevatedButton.icon(
-              onPressed: () => setState(() => _photo = DemoData.boxPhoto),
+              onPressed: _picking ? null : _takePhoto,
               icon: const Icon(Icons.photo_camera_outlined, size: 20),
               label: Text(l10n.deliveryTakePhoto),
             )
@@ -113,14 +154,11 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
     );
   }
 
-  Future<void> _confirm(int id, String photo) async {
+  Future<void> _confirm(int id, DeliveryPhoto photo) async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
-    final ok = await context.read<OrdersController>().confirmDelivery(
-      id,
-      photoAsset: photo,
-    );
+    final ok = await context.read<OrdersController>().confirmDelivery(id, photo: photo);
     if (!mounted) return;
     if (!ok) return;
 
@@ -128,6 +166,19 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
     // Возвращаемся в карточку заказа, а не в список: курьер видит, что
     // статус сменился и снимок на месте, — то есть что действие сработало.
     router.go(AppRoutes.orderPath(id));
+  }
+}
+
+class _PhotoPreview extends StatelessWidget {
+  const _PhotoPreview({required this.photo});
+
+  final DeliveryPhoto photo;
+
+  @override
+  Widget build(BuildContext context) {
+    final Uint8List? bytes = photo.bytes;
+    if (bytes != null) return Image.memory(bytes, fit: BoxFit.cover);
+    return Image.asset(photo.asset ?? '', fit: BoxFit.cover);
   }
 }
 
