@@ -23,3 +23,6 @@ _git_empty_backup/
 workspace/backend/media/
 workspace/backend/tests/.media/
 workspace/backend/.env
+
+workspace/deploy/prod/.env
+workspace/deploy/prod/secrets/

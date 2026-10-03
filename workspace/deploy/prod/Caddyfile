@@ -1,0 +1,28 @@
+# HTTPS-сертификат Let's Encrypt Caddy получает и продлевает сам —
+# нужно только, чтобы A-запись домена смотрела на IP сервера.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Фото товаров неизменны (новое фото — новое имя файла): кэш на год.
+	@media path /media/*
+	header @media Cache-Control "public, max-age=31536000, immutable"
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Фото и тела запросов — до 20 МБ (лимит загрузки фото в бэкенде 15 МБ).
+	request_body {
+		max_size 20MB
+	}
+
+	reverse_proxy api:8000
+}
