@@ -13,6 +13,7 @@ import 'widgets/courier_block.dart';
 import 'widgets/order_format.dart';
 import 'widgets/order_timeline.dart';
 import 'widgets/status_pill.dart';
+import 'package:client_app/core/widgets/app_image.dart';
 
 /// Карточка заказа: таймлайн стадий, курьер, состав, итог и фото доставки.
 class OrderDetailScreen extends StatefulWidget {
@@ -290,7 +291,7 @@ class _OrderLine extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-          child: Image.asset(
+          child: AppImage(
             item.imageAsset,
             width: 44,
             height: 44,
@@ -406,7 +407,7 @@ class _DeliveryPhoto extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSizes.radius),
           child: AspectRatio(
             aspectRatio: 4 / 3,
-            child: Image.asset(
+            child: AppImage(
               asset,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => const ColoredBox(

@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../core/content/app_content.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_image.dart';
 
 /// Экран загрузки.
 ///
@@ -74,42 +76,70 @@ class _Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Логотип, название и подзаголовок — из настроек админки. Нет логотипа —
+    // фирменный знак из букв названия на фирменном цвете.
+    final brand = AppContent.instance.brand;
+    final accent = brand.accentColor ?? AppColors.accent;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 96,
           height: 96,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: AppColors.accent,
+            color: brand.hasLogo ? Colors.transparent : accent,
             borderRadius: BorderRadius.circular(24),
           ),
           alignment: Alignment.center,
-          child: const Text(
-            'TT',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 40,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          child: brand.hasLogo
+              ? AppImage(
+                  brand.logoFile,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => _Monogram(text: brand.monogram, color: accent),
+                )
+              : _Monogram(text: brand.monogram, color: accent),
         ),
         const SizedBox(height: 20),
-        const Text(
-          'TUR TUK',
+        Text(
+          brand.name,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 40,
             fontWeight: FontWeight.w800,
-            color: AppColors.accent,
+            color: accent,
             letterSpacing: 1.5,
           ),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Доставка в отели Кемера',
-          style: TextStyle(fontSize: 15, color: AppColors.textMuted),
-        ),
+        if (brand.tagline.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            brand.tagline,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 15, color: AppColors.textMuted),
+          ),
+        ],
       ],
+    );
+  }
+}
+
+class _Monogram extends StatelessWidget {
+  const _Monogram({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: color,
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w800),
+        ),
+      ),
     );
   }
 }

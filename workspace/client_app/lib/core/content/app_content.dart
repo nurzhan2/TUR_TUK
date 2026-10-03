@@ -2,17 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 import '../../models/category.dart';
 import '../../models/product.dart';
+import '../demo/demo_mode.dart';
+import '../network/api_config.dart';
 
-/// Контент приложения: каталог, отели, промокоды, суммы доставки, бренд.
+enum ContentSource { server, assets }
+
+/// Контент приложения: каталог, отели, суммы доставки, бренд, баннеры, контакты.
 ///
-/// Всё это приходит от заказчицы и лежит в `workspace/content/*.json`, откуда
-/// скрипт `tools/apply_content.py` раскладывает готовые файлы в ассеты. В коде
-/// не остаётся ни одного товара, отеля или порога суммы: когда придёт
-/// настоящий каталог, меняются JSON и фотографии, а приложение пересобирается
-/// без единой правки в Dart.
+/// Источник правды — админка: `GET /app/config` отдаёт всё одним ответом, и
+/// владелица меняет цены, фото, отели и тексты без выпуска новой версии.
+/// Файлы `assets/content/*.json` — запасной контент для демо без сервера.
 ///
 /// Загружается один раз в `main()` до `runApp`, дальше — [AppContent.instance].
 class AppContent {
@@ -50,8 +53,49 @@ class AppContent {
     return value;
   }
 
-  /// Читает три файла настроек из ассетов.
-  static Future<void> load() async {
+  /// Загружает контент до первого кадра.
+  ///
+  /// Источник — админка (`GET /app/config`), если [kContentFromApi]. Сервер
+  /// недоступен: демо берёт ассеты, боевая сборка возвращает `false`, и
+  /// `main()` показывает экран «Нет связи · Повторить» — показывать гостю
+  /// вымышленный каталог из ассетов в настоящем магазине нельзя.
+  static Future<bool> load({http.Client? client}) async {
+    if (kContentFromApi) {
+      final remote = await _fetchRemote(client ?? http.Client());
+      if (remote != null) {
+        _instance = _fromMaps(
+          settings: remote,
+          hotels: remote['hotels'] as List? ?? const [],
+          categories: remote['categories'] as List? ?? const [],
+          products: remote['products'] as List? ?? const [],
+        );
+        source = ContentSource.server;
+        return true;
+      }
+      if (!kDemoMode) return false;
+    }
+    await _loadAssets();
+    source = ContentSource.assets;
+    return true;
+  }
+
+  /// Откуда пришёл текущий контент — для подписи в профиле и для тестов.
+  static ContentSource source = ContentSource.assets;
+
+  static Future<Map<String, dynamic>?> _fetchRemote(http.Client client) async {
+    try {
+      final response = await client
+          .get(Uri.parse('${ApiConfig.baseUrl}/app/config'))
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return null;
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      return body is Map<String, dynamic> ? body : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> _loadAssets() async {
     final settings = jsonDecode(
       await rootBundle.loadString('assets/content/settings.json'),
     ) as Map<String, dynamic>;
@@ -61,8 +105,24 @@ class AppContent {
     final catalog = jsonDecode(
       await rootBundle.loadString('assets/content/catalog.json'),
     ) as Map<String, dynamic>;
+    _instance = _fromMaps(
+      settings: settings,
+      hotels: hotels['hotels'] as List? ?? const [],
+      categories: catalog['categories'] as List? ?? const [],
+      products: catalog['products'] as List? ?? const [],
+    );
+  }
 
-    _instance = AppContent(
+  /// Для тестов: подставить контент без файлов и сети.
+  static void setForTesting(AppContent content) => _instance = content;
+
+  static AppContent _fromMaps({
+    required Map<String, dynamic> settings,
+    required List hotels,
+    required List categories,
+    required List products,
+  }) {
+    return AppContent(
       brand: Brand.fromJson(settings['brand'] as Map<String, dynamic>? ?? {}),
       delivery: DeliverySettings.fromJson(
         settings['delivery'] as Map<String, dynamic>? ?? {},
@@ -77,16 +137,13 @@ class AppContent {
         settings['contacts'] as Map<String, dynamic>? ?? {},
       ),
       hotels: [
-        for (final h in (hotels['hotels'] as List? ?? []))
-          Hotel.fromJson(h as Map<String, dynamic>),
-      ].where((h) => h.active).toList(),
+        for (final h in hotels) Hotel.fromJson(h as Map<String, dynamic>),
+      ].where((h) => h.active && h.name.isNotEmpty).toList(),
       categories: [
-        for (final c in (catalog['categories'] as List? ?? []))
-          _categoryFromJson(c as Map<String, dynamic>),
+        for (final c in categories) _categoryFromJson(c as Map<String, dynamic>),
       ],
       products: [
-        for (final p in (catalog['products'] as List? ?? []))
-          _productFromJson(p as Map<String, dynamic>),
+        for (final p in products) _productFromJson(p as Map<String, dynamic>),
       ],
       promoCodes: [
         for (final p in (settings['promoCodes'] as List? ?? []))
@@ -95,7 +152,7 @@ class AppContent {
       banners: [
         for (final b in (settings['banners'] as List? ?? []))
           PromoBanner.fromJson(b as Map<String, dynamic>),
-      ],
+      ].where((b) => b.title.isNotEmpty).toList(),
     );
   }
 
@@ -138,6 +195,8 @@ class AppContent {
 
   static Product _productFromJson(Map<String, dynamic> json) {
     final sku = json['sku'] as String? ?? 'p${json['id']}';
+    // С сервера приходит полный адрес фото; в ассетах — имя файла по артикулу.
+    final remote = json['photoUrl'] as String? ?? '';
     final photo = json['photo'] as String? ?? '$sku.jpg';
     return Product(
       id: json['id'] as int,
@@ -147,7 +206,7 @@ class AppContent {
       price: (json['price'] as num? ?? 0).toDouble(),
       oldPrice: (json['oldPrice'] as num?)?.toDouble(),
       unit: json['unit'] as String? ?? '',
-      imageAsset: 'assets/content/photos/$photo',
+      imageAsset: json.containsKey('photoUrl') ? remote : 'assets/content/photos/$photo',
       isAvailable: json['isAvailable'] as bool? ?? true,
     );
   }
@@ -159,23 +218,50 @@ class Brand {
     required this.tagline,
     required this.deliveryPromise,
     required this.logoFile,
+    this.accentColor,
   });
 
   final String name;
   final String tagline;
   final String deliveryPromise;
 
-  /// Пусто, пока заказчица не пришлёт логотип — тогда рисуется текстовый знак.
+  /// Адрес логотипа с сервера или путь в ассетах. Пусто — рисуется знак «TT».
   final String logoFile;
+
+  /// Фирменный цвет из админки; null — цвет темы приложения.
+  final Color? accentColor;
 
   bool get hasLogo => logoFile.isNotEmpty;
 
-  factory Brand.fromJson(Map<String, dynamic> json) => Brand(
-        name: json['name'] as String? ?? 'TUR TUK',
-        tagline: json['tagline'] as String? ?? '',
-        deliveryPromise: json['deliveryPromise'] as String? ?? '',
-        logoFile: json['logoFile'] as String? ?? '',
-      );
+  /// «TT» из «TUR TUK»: первые буквы первых двух слов названия.
+  String get monogram {
+    final words = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    if (words.isEmpty) return 'TT';
+    if (words.length == 1) return words.first.substring(0, words.first.length.clamp(1, 2)).toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+
+  factory Brand.fromJson(Map<String, dynamic> json) {
+    final logoUrl = json['logoUrl'] as String? ?? '';
+    final logoFile = json['logoFile'] as String? ?? '';
+    return Brand(
+      name: (json['name'] as String?)?.trim().isNotEmpty == true ? json['name'] as String : 'TUR TUK',
+      tagline: json['tagline'] as String? ?? '',
+      deliveryPromise: json['deliveryPromise'] as String? ?? '',
+      logoFile: logoUrl.isNotEmpty
+          ? logoUrl
+          : (logoFile.isNotEmpty ? 'assets/content/photos/$logoFile' : ''),
+      accentColor: _parseColor(json['accentColor'] as String?),
+    );
+  }
+
+  static Color? _parseColor(String? hex) {
+    if (hex == null) return null;
+    final clean = hex.replaceFirst('#', '');
+    if (clean.length != 6) return null;
+    final value = int.tryParse(clean, radix: 16);
+    return value == null ? null : Color(0xFF000000 | value);
+  }
 }
 
 class DeliverySettings {
@@ -191,8 +277,10 @@ class DeliverySettings {
   final double freeDeliveryFrom;
   final int etaMinutes;
 
+  /// Та же формула, что у сервера (`delivery_fee_for`): порог 0 — бесплатной
+  /// доставки нет вовсе.
   double feeFor(double subtotal) =>
-      subtotal >= freeDeliveryFrom ? 0 : deliveryFee;
+      freeDeliveryFrom > 0 && subtotal >= freeDeliveryFrom ? 0 : deliveryFee;
 
   factory DeliverySettings.fromJson(Map<String, dynamic> json) =>
       DeliverySettings(

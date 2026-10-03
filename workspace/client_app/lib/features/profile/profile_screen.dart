@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/controller_state.dart';
 import '../../controllers/locale_controller.dart';
+import '../../core/content/app_content.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -101,12 +102,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: _logout,
             ),
           const SizedBox(height: 24),
-          const Center(
+          Center(
             child: Text(
               // Версия зашита строкой: читать pubspec в рантайме нечем без
               // package_info_plus, а тянуть пакет ради подписи дороже.
-              'TUR TUK · версия 1.0.0',
-              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              '${AppContent.instance.brand.name} · версия 1.0.0',
+              style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
             ),
           ),
         ],
@@ -119,16 +120,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) context.go(AppRoutes.auth);
   }
 
+  /// «О приложении» — название, подзаголовок и контакты поддержки из
+  /// настроек админки. Пустые контакты не показываются.
   void _showAbout() {
     final l10n = AppLocalizations.of(context)!;
+    final content = AppContent.instance;
+    final c = content.contacts;
+    final rows = <(IconData, String)>[
+      if (c.phone.isNotEmpty) (Icons.phone_outlined, c.phone),
+      if (c.whatsapp.isNotEmpty) (Icons.chat_outlined, 'WhatsApp: ${c.whatsapp}'),
+      if (c.telegram.isNotEmpty) (Icons.send_outlined, 'Telegram: ${c.telegram}'),
+      if (c.email.isNotEmpty) (Icons.mail_outline, c.email),
+      if (c.supportHours.isNotEmpty) (Icons.schedule, c.supportHours),
+      if (c.privacyPolicyUrl.isNotEmpty) (Icons.privacy_tip_outlined, c.privacyPolicyUrl),
+    ];
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('TUR TUK'),
-        content: const Text(
-          // TODO l10n: текст «о приложении» ещё не согласован с заказчицей
-          'Доставка сувениров, косметики и продуктов в отели Кемера.\n\n'
-          'Версия 1.0.0',
+        title: Text(content.brand.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (content.brand.tagline.isNotEmpty) Text(content.brand.tagline),
+            if (rows.isNotEmpty) const SizedBox(height: 14),
+            for (final (icon, text) in rows)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(icon, size: 18, color: AppColors.textMuted),
+                    const SizedBox(width: 10),
+                    Expanded(child: SelectableText(text)),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 6),
+            const Text('Версия 1.0.0', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          ],
         ),
         actions: [
           TextButton(

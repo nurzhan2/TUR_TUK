@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/catalog_controller.dart';
+import '../../core/content/app_content.dart';
 import '../../core/di.dart';
 import '../../core/format.dart';
 import '../../core/router/app_router.dart';
@@ -309,25 +310,26 @@ class _DeliveryNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Срок — из настроек админки (Настройки → Время доставки).
+    final eta = AppContent.instance.delivery.etaMinutes;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.accentSoft,
         borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.local_shipping_outlined,
             size: 22,
             color: AppColors.accent,
           ),
-          SizedBox(width: 10),
-          // TODO l10n: срок доставки; новые ключи в общий .arb не заводим.
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Доставка на рецепцию отеля за 40–60 минут',
-              style: TextStyle(
+              'Доставка на рецепцию отеля за $eta минут',
+              style: const TextStyle(
                 fontSize: 14,
                 height: 1.3,
                 fontWeight: FontWeight.w600,

@@ -10,6 +10,7 @@ import '../../core/theme/app_theme.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../models/cart.dart';
 import 'cart_totals.dart';
+import 'package:client_app/core/widgets/app_image.dart';
 
 /// Корзина: позиции со степпером и свайпом, блок «Итого», плашка
 /// минимальной суммы и закреплённая внизу кнопка оформления.
@@ -283,7 +284,7 @@ class _ProductThumb extends StatelessWidget {
         height: _size,
         child: asset.isEmpty
             ? const _ThumbPlaceholder()
-            : Image.asset(
+            : AppImage(
                 asset,
                 fit: BoxFit.cover,
                 // Битый путь к фото не должен выбрасывать красный экран

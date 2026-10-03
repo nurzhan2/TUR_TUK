@@ -32,8 +32,11 @@ class Di {
 
   static ApiClient get api => _api ??= ApiClient();
 
-  static CatalogRepository get catalog => _catalog ??=
-      kDemoMode ? const DemoCatalogRepository() : ApiCatalogRepository(api);
+  // Каталог читается из AppContent: он загружен из `GET /app/config` (или из
+  // ассетов в демо без сервера) — одна точка правды для витрины.
+  static CatalogRepository get catalog => _catalog ??= kDemoMode || kContentFromApi
+      ? const DemoCatalogRepository()
+      : ApiCatalogRepository(api);
 
   static CartRepository get cart =>
       _cart ??= kDemoMode ? const DemoCartRepository() : ApiCartRepository(api);
@@ -41,8 +44,11 @@ class Di {
   static OrdersRepository get orders => _orders ??=
       kDemoMode ? const DemoOrdersRepository() : ApiOrdersRepository(api);
 
-  static PromoRepository get promo =>
-      _promo ??= kDemoMode ? const DemoPromoRepository() : ApiPromoRepository(api);
+  // Промокоды живут в админке: когда контент приходит с сервера, проверка
+  // тоже идёт туда (`POST /promo/validate` публичный, токен не нужен).
+  static PromoRepository get promo => _promo ??= kDemoMode && !kContentFromApi
+      ? const DemoPromoRepository()
+      : ApiPromoRepository(api);
 
   static ChatRepository get chat =>
       _chat ??= kDemoMode ? DemoChatRepository() : ApiChatRepository(api);

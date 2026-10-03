@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/cart_controller.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../controllers/controller_state.dart';
+import '../../core/content/app_content.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -149,13 +150,15 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         context.read<CatalogController>().selectCategory(id),
                   ),
                 ),
-              SliverToBoxAdapter(
-                child: _PromoBanner(
-                  controller: _bannerPage,
-                  index: _bannerIndex,
-                  onChanged: (index) => setState(() => _bannerIndex = index),
+              // Баннеров в админке может не быть — тогда блок не рисуется.
+              if (_promoSlides.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _PromoBanner(
+                    controller: _bannerPage,
+                    index: _bannerIndex,
+                    onChanged: (index) => setState(() => _bannerIndex = index),
+                  ),
                 ),
-              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -260,18 +263,22 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final brand = AppContent.instance.brand;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSizes.pagePadding, 8, 6, 8),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Название и обещание — из настроек админки.
                 Text(
-                  'TUR TUK',
-                  style: TextStyle(
+                  brand.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     color: AppColors.accent,
@@ -279,13 +286,15 @@ class _Header extends StatelessWidget {
                     height: 1.1,
                   ),
                 ),
-                SizedBox(height: 2),
-                // TODO l10n: обещание доставки; новые ключи в общий .arb
-                // не заводим — файл правят четыре сессии одновременно.
-                Text(
-                  'Доставка в отель за 60 минут',
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                ),
+                if (brand.deliveryPromise.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    brand.deliveryPromise,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  ),
+                ],
               ],
             ),
           ),
@@ -443,7 +452,7 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-/// Слайд промо-баннера. Тексты — часть демо-контента, как названия товаров.
+/// Слайд промо-баннера. Тексты задаются в админке (Настройки → Баннеры).
 class _PromoSlide {
   const _PromoSlide(this.title, this.subtitle, this.icon);
 
@@ -452,24 +461,19 @@ class _PromoSlide {
   final IconData icon;
 }
 
-// TODO l10n: акции демо; ключи в общий .arb не добавляем.
-const List<_PromoSlide> _promoSlides = [
-  _PromoSlide(
-    'Скидка 10% по промокоду KEMER10',
-    'на первый заказ в приложении',
-    Icons.local_offer_outlined,
-  ),
-  _PromoSlide(
-    'Бесплатная доставка от 5000 ₽',
-    'до рецепции вашего отеля',
-    Icons.local_shipping_outlined,
-  ),
-  _PromoSlide(
-    'Турецкие сладости',
-    'лукум и пахлава — привезём за час',
-    Icons.cake_outlined,
-  ),
+const List<IconData> _promoIcons = [
+  Icons.local_offer_outlined,
+  Icons.local_shipping_outlined,
+  Icons.cake_outlined,
+  Icons.spa_outlined,
+  Icons.beach_access_outlined,
+  Icons.card_giftcard_outlined,
 ];
+
+List<_PromoSlide> get _promoSlides => [
+      for (final (i, banner) in AppContent.instance.banners.indexed)
+        _PromoSlide(banner.title, banner.subtitle, _promoIcons[i % _promoIcons.length]),
+    ];
 
 class _PromoBanner extends StatelessWidget {
   const _PromoBanner({

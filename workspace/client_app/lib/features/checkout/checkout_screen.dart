@@ -8,12 +8,14 @@ import '../../controllers/orders_controller.dart';
 import '../../core/di.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/hotel_picker.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../models/cart.dart';
 import '../../models/promo_result.dart';
 import '../cart/cart_totals.dart';
 import 'kemer_hotels.dart';
 import 'order_success_screen.dart';
+import 'package:client_app/core/widgets/app_image.dart';
 
 /// Способ оплаты. Наличных нет намеренно: заказчица исключила их из ТЗ —
 /// курьер не носит сдачу и не принимает лиры.
@@ -32,7 +34,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _promoController = TextEditingController();
 
-  String _hotel = kemerHotels.first;
+  String _hotel = '';
+  bool _hotelMissing = false;
   PaymentMethod _payment = PaymentMethod.card;
 
   /// Последний ответ на проверку промокода. `null` — промокод не вводили.
@@ -105,11 +108,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _pay(CartTotals totals, AppLocalizations l10n) async {
     if (_paying) return;
     final room = _roomController.text.trim();
-    if (totals.belowMinOrder || room.isEmpty) {
+    if (totals.belowMinOrder || room.isEmpty || _hotel.isEmpty) {
       setState(() {
         _minOrderError =
             totals.belowMinOrder ? l10n.checkoutMinOrderError : null;
         _roomMissing = room.isEmpty;
+        _hotelMissing = _hotel.isEmpty;
       });
       return;
     }
@@ -118,6 +122,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _paying = true;
       _minOrderError = null;
       _roomMissing = false;
+      _hotelMissing = false;
     });
 
     // Имитация оплаты. Никакого редиректа в ЮKassa: демо показывают без
@@ -132,6 +137,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             roomNumber: room,
             promoCode: (_promo?.valid ?? false) ? _promo!.code : null,
             comment: comment.isEmpty ? null : comment,
+            paymentMethod: _payment.name,
           );
       if (!mounted) return;
       await context.read<CartController>().clear();
@@ -184,29 +190,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // `DropdownButton`, а не `DropdownButtonFormField`: у поля-формы
-          // значение живёт в его собственном состоянии и не следует за
-          // `_hotel`, который проставляется из профиля уже после первого
-          // кадра.
-          InputDecorator(
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.apartment_outlined),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _hotel,
-                isExpanded: true,
-                borderRadius: BorderRadius.circular(AppSizes.radius),
-                items: [
-                  for (final hotel in kemerHotels)
-                    DropdownMenuItem<String>(value: hotel, child: Text(hotel)),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _hotel = value);
-                },
-              ),
-            ),
+          // Поле с поиском: отелей в зоне доставки сотни. Значение — из
+          // `_hotel`, который проставляется из профиля после первого кадра.
+          HotelPickerField(
+            value: _hotel,
+            prefixIcon: const Icon(Icons.apartment_outlined),
+            errorText: _hotelMissing ? 'Выберите отель' : null,
+            onChanged: (value) => setState(() {
+              _hotel = value;
+              _hotelMissing = false;
+            }),
           ),
           const SizedBox(height: AppSizes.gap),
           TextField(
@@ -598,7 +591,7 @@ class _OrderLine extends StatelessWidget {
             height: 44,
             child: item.product.imageAsset.isEmpty
                 ? const ColoredBox(color: AppColors.surface)
-                : Image.asset(
+                : AppImage(
                     item.product.imageAsset,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) =>

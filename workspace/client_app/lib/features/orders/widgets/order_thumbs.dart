@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../models/order.dart';
+import 'package:client_app/core/widgets/app_image.dart';
 
 /// Стопка миниатюр позиций заказа — внахлёст, как аватары участников.
 ///
@@ -34,7 +35,7 @@ class OrderThumbs extends StatelessWidget {
             Positioned(
               left: step * i,
               child: _Circle(
-                child: Image.asset(
+                child: AppImage(
                   shown[i].imageAsset,
                   width: _size,
                   height: _size,

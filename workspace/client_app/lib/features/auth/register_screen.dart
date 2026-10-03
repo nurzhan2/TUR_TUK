@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/controller_state.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/hotel_picker.dart';
 import '../../l10n/gen/app_localizations.dart';
-import 'kemer_hotels.dart';
 
 /// Анкета после подтверждения кода.
 ///
@@ -24,7 +24,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _roomController = TextEditingController();
 
-  late String _hotel = kemerHotels.first;
+  // Пусто, пока гость сам не выберет: «первый по алфавиту» по умолчанию —
+  // верный способ отправить заказ в чужой отель.
+  String _hotel = '';
   DateTime? _dob;
 
   @override
@@ -36,6 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool get _canContinue =>
       _nameController.text.trim().isNotEmpty &&
+      _hotel.isNotEmpty &&
       _roomController.text.trim().isNotEmpty;
 
   Future<void> _pickDob() async {
@@ -166,19 +169,7 @@ class HotelDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: InputDecoration(labelText: label),
-      borderRadius: BorderRadius.circular(AppSizes.radius),
-      items: [
-        for (final hotel in kemerHotels)
-          DropdownMenuItem(value: hotel, child: Text(hotel)),
-      ],
-      onChanged: (selected) {
-        if (selected != null) onChanged(selected);
-      },
-    );
+    return HotelPickerField(value: value, label: label, onChanged: onChanged);
   }
 }
 

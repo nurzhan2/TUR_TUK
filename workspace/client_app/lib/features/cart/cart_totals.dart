@@ -23,7 +23,13 @@ class CartTotals {
   /// Скидка по промокоду. В корзине промокода ещё нет, там всегда 0.
   final double discount;
 
-  bool get isDeliveryFree => subtotal >= freeDeliveryFrom;
+  /// Формула одна с сервером (`delivery_fee_for`): порог 0 — бесплатной
+  /// доставки нет, иначе по сумме товаров ДО скидки.
+  bool get isDeliveryFree => freeDeliveryFrom > 0 && subtotal >= freeDeliveryFrom;
+
+  /// Сколько добрать до бесплатной доставки; 0 — уже бесплатно или порога нет.
+  double get missingToFreeDelivery =>
+      freeDeliveryFrom > 0 && !isDeliveryFree ? freeDeliveryFrom - subtotal : 0;
 
   double get delivery => isDeliveryFree ? 0 : deliveryFee;
 

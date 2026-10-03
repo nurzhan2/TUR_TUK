@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../../models/product.dart';
 import 'cart_action_button.dart';
+import 'package:client_app/core/widgets/app_image.dart';
 
 /// Карточка товара витрины — в стиле Wildberries: квадратное фото во всю
 /// ширину, крупная цена, название в две строки и кнопка снизу.
@@ -145,7 +146,7 @@ class ProductPhoto extends StatelessWidget {
               // Недоступный товар видно, но он явно «выключен»: убрать его
               // из выдачи нельзя — заказчица спросит, где он.
               opacity: product.isAvailable ? 1 : 0.4,
-              child: Image.asset(
+              child: AppImage(
                 product.imageAsset,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stack) => const _PhotoStub(),

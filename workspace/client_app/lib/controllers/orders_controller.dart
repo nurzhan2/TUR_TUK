@@ -44,6 +44,7 @@ class OrdersController extends ChangeNotifier {
     required String roomNumber,
     String? promoCode,
     String? comment,
+    String? paymentMethod,
   }) async {
     try {
       final order = await Di.orders.create(
@@ -51,6 +52,7 @@ class OrdersController extends ChangeNotifier {
         roomNumber: roomNumber,
         promoCode: promoCode,
         comment: comment,
+        paymentMethod: paymentMethod,
       );
       lastCreated = order;
       // Новый заказ кладём в начало списка сразу, не дожидаясь `load()`:
