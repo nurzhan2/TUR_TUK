@@ -91,6 +91,9 @@ class _ProductScreenState extends State<ProductScreen> {
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
+        // Flutter 3.32+: SnackBar с action по умолчанию не скрывается сам
+        // и висел над экраном до следующего уведомления.
+        persist: false,
         content: Text('${product.name} — ${l10n.productInCart}'),
         duration: const Duration(seconds: 3),
         action: SnackBarAction(

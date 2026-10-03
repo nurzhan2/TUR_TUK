@@ -67,6 +67,14 @@ class AppImage extends StatelessWidget {
         if (wasSynchronouslyLoaded) return child;
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 280),
+          // passthrough: картинка получает размеры родителя (квадрат карточки)
+          // и BoxFit.cover заполняет его. Стандартный Stack давал свободные
+          // размеры — фото вписывалось в ширину с полосами сверху и снизу.
+          layoutBuilder: (current, previous) => Stack(
+            fit: StackFit.passthrough,
+            alignment: Alignment.center,
+            children: [...previous, ?current],
+          ),
           child: frame == null
               ? const _Placeholder(key: ValueKey('loading'))
               : KeyedSubtree(key: const ValueKey('image'), child: child),

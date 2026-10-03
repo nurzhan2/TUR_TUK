@@ -71,6 +71,9 @@ class _CartScreenState extends State<CartScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
+          // Flutter 3.32+: SnackBar с action по умолчанию не скрывается сам
+          // и висел над экраном до следующего уведомления.
+          persist: false,
           content: const Text('Товар удалён'), // TODO l10n
           action: SnackBarAction(
             label: 'Отменить', // TODO l10n
@@ -398,6 +401,18 @@ class _TotalsCard extends StatelessWidget {
                 : money(totals.delivery),
             valueColor: totals.isDeliveryFree ? AppColors.success : null,
           ),
+          // Подсказка как в Самокате: сколько добрать до бесплатной
+          // доставки. Порог задаётся в админке; 0 — подсказки нет.
+          if (totals.missingToFreeDelivery > 0) ...[
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'До бесплатной доставки — ещё ${money(totals.missingToFreeDelivery)}',
+                style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              ),
+            ),
+          ],
           const Padding(
             padding: EdgeInsets.symmetric(vertical: AppSizes.gap),
             child: Divider(),

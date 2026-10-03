@@ -21,14 +21,55 @@ class CartController extends ChangeNotifier {
   Future<void> load() => _run(() => Di.cart.load());
 
   Future<void> add(int productId, {int qty = 1}) =>
-      _run(() => Di.cart.add(productId, qty: qty));
+      _serial(() => Di.cart.add(productId, qty: qty));
 
-  Future<void> setQuantity(int itemId, int qty) =>
-      _run(() => Di.cart.setQuantity(itemId, qty));
+  /// «+/−» в корзине: цифра и итог меняются СРАЗУ, запрос уходит следом.
+  /// Без этого быстрые нажатия терялись: каждый тап до ответа сервера
+  /// отправлял старое количество, и «+» трижды давал +1.
+  Future<void> setQuantity(int itemId, int qty) {
+    cart = cart.withQuantity(itemId, qty);
+    notifyListeners();
+    return _serial(() => Di.cart.setQuantity(itemId, qty));
+  }
 
-  Future<void> remove(int itemId) => _run(() => Di.cart.remove(itemId));
+  Future<void> remove(int itemId) => _serial(() => Di.cart.remove(itemId));
 
-  Future<void> clear() => _run(() => Di.cart.clear());
+  Future<void> clear() => _serial(() => Di.cart.clear());
+
+  /// Изменения корзины выполняются строго по очереди, а ответ сервера
+  /// применяется только после ПОСЛЕДНЕГО из них — иначе ответ на второй
+  /// тап перерисовал бы цифру назад поверх уже показанного третьего.
+  Future<void> _queue = Future<void>.value();
+  int _pending = 0;
+
+  Future<void> _serial(Future<Cart> Function() action) {
+    _pending++;
+    final next = _queue.then((_) async {
+      try {
+        final result = await action();
+        _pending--;
+        if (_pending == 0) {
+          cart = result;
+          state = ControllerState.loaded;
+          errorMessage = null;
+          notifyListeners();
+        }
+      } catch (error) {
+        _pending--;
+        state = ControllerState.error;
+        errorMessage = '$error';
+        // Оптимистичная цифра могла разойтись с сервером — сверяемся.
+        if (_pending == 0) {
+          try {
+            cart = await Di.cart.load();
+          } catch (_) {}
+        }
+        notifyListeners();
+      }
+    });
+    _queue = next;
+    return next;
+  }
 
   /// Сколько штук этого товара уже в корзине — карточка товара показывает
   /// «в корзине, 2» вместо кнопки «в корзину».

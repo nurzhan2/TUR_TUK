@@ -42,6 +42,19 @@ class Cart {
 
   bool get isEmpty => items.isEmpty;
 
+  /// Корзина с новым количеством позиции — для мгновенного отклика на «+/−»
+  /// до ответа сервера. Итог пересчитывается тут же.
+  Cart withQuantity(int itemId, int quantity) {
+    final updated = [
+      for (final item in items)
+        item.id == itemId ? item.copyWith(quantity: quantity) : item,
+    ];
+    return Cart(
+      items: updated,
+      total: updated.fold(0.0, (sum, item) => sum + item.lineTotal),
+    );
+  }
+
   factory Cart.fromJson(Map<String, dynamic> json) => Cart(
         items: [
           for (final item in (json['items'] as List? ?? const []))

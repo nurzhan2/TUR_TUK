@@ -51,6 +51,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
+            // Flutter 3.32+: SnackBar с action по умолчанию не скрывается сам
+            // и висел над экраном до следующего уведомления.
+            persist: false,
             // TODO l10n: строк нет в общем файле, новые ключи заводить нельзя
             content: const Text('Товары добавлены в корзину'),
             action: SnackBarAction(
