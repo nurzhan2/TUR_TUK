@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -17,3 +17,8 @@ class SmsVerificationCode(TimestampMixin, Base):
     # NULL = ещё не использован. Раздельно от expires_at: код мог быть верно
     # введён до истечения TTL, а второй раз с тем же кодом пройти не должен.
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Неверные вводы: после лимита код сгорает — перебор 10^6 вариантов
+    # превращается в 5 попыток на одну SMS.
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    # С какого IP запрошен код — для лимита отправок на адрес (SMS-pumping).
+    ip: Mapped[str | None] = mapped_column(String(45), index=True)

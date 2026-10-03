@@ -1,7 +1,8 @@
-import random
+import secrets
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,7 +22,7 @@ from app.schemas.auth import (
     UserOut,
     VerifyCodeRequest,
 )
-from app.services.sms_auth import InvalidSmsCode, verify_sms_code
+from app.services.sms_auth import InvalidSmsCode, TooManyAttempts, verify_sms_code
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -32,17 +33,77 @@ def _sms_provider_dependency() -> SmsProvider:
 
 
 def _generate_code(length: int) -> str:
-    return "".join(str(random.randint(0, 9)) for _ in range(length))
+    # secrets, а не random: код — это пароль на 5 минут, предсказуемый ГПСЧ
+    # здесь недопустим.
+    return "".join(str(secrets.randbelow(10)) for _ in range(length))
+
+
+def _client_ip(request: Request) -> str | None:
+    # За Caddy uvicorn запускается с --proxy-headers, и request.client —
+    # уже реальный адрес гостя, а не прокси.
+    return request.client.host if request.client else None
+
+
+async def _enforce_send_limits(session: AsyncSession, phone: str, ip: str | None, now: datetime) -> None:
+    """SMS стоят денег: без лимитов бот за ночь сжигает баланс SMS.ru,
+    рассылая коды на чужие номера (SMS-pumping)."""
+    settings = get_settings()
+    hour_ago = now - timedelta(hours=1)
+
+    last_sent = (
+        await session.execute(
+            select(func.max(SmsVerificationCode.created_at)).where(SmsVerificationCode.phone == phone)
+        )
+    ).scalar_one()
+    if last_sent is not None:
+        wait = settings.sms_resend_seconds - int((now - last_sent).total_seconds())
+        if wait > 0:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"повторно отправить код можно через {wait} с",
+                headers={"Retry-After": str(wait)},
+            )
+
+    per_phone = (
+        await session.execute(
+            select(func.count(SmsVerificationCode.id)).where(
+                SmsVerificationCode.phone == phone, SmsVerificationCode.created_at >= hour_ago
+            )
+        )
+    ).scalar_one()
+    if per_phone >= settings.sms_max_per_phone_hour:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="слишком много запросов кода на этот номер — попробуйте через час",
+        )
+
+    if ip:
+        per_ip = (
+            await session.execute(
+                select(func.count(SmsVerificationCode.id)).where(
+                    SmsVerificationCode.ip == ip, SmsVerificationCode.created_at >= hour_ago
+                )
+            )
+        ).scalar_one()
+        if per_ip >= settings.sms_max_per_ip_hour:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="слишком много запросов кода — попробуйте позже",
+            )
 
 
 @router.post("/send-code", response_model=SendCodeResponse)
 async def send_code(
     payload: SendCodeRequest,
+    request: Request,
     session: AsyncSession = Depends(get_session),
     sms_provider: SmsProvider = Depends(_sms_provider_dependency),
 ) -> SendCodeResponse:
     settings = get_settings()
     now = datetime.now(timezone.utc)
+    ip = _client_ip(request)
+
+    await _enforce_send_limits(session, payload.phone, ip, now)
 
     # старые невыданные коды по этому номеру гасим: иначе после запроса нового
     # кода предыдущий остаётся действительным параллельно с ним
@@ -57,6 +118,7 @@ async def send_code(
         SmsVerificationCode(
             phone=payload.phone,
             code=code,
+            ip=ip,
             expires_at=now + timedelta(minutes=settings.sms_code_ttl_minutes),
         )
     )
@@ -83,8 +145,12 @@ async def verify_code(
 ) -> TokenResponse:
     try:
         user = await verify_sms_code(session, payload.phone, payload.code)
+    except TooManyAttempts as exc:
+        await session.commit()  # код сгорел — это должно сохраниться
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
     except InvalidSmsCode as exc:
-        await session.rollback()
+        # Коммит, а не откат: иначе счётчик неверных попыток не растёт.
+        await session.commit()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     await session.commit()
@@ -126,3 +192,36 @@ async def register(
     await session.commit()
     await session.refresh(current_user)
     return current_user
+
+
+@router.get("/me", response_model=UserOut)
+async def me(current_user: User = Depends(get_current_user)) -> User:
+    """Профиль по токену: приложение восстанавливает гостя после перезапуска
+    (раньше профиль жил только в памяти до закрытия приложения)."""
+    return current_user
+
+
+class FcmTokenIn(BaseModel):
+    token: str = Field(min_length=10, max_length=255)
+
+
+@router.post("/fcm-token", status_code=status.HTTP_204_NO_CONTENT)
+async def save_fcm_token(
+    payload: FcmTokenIn,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Токен устройства для push. Приложения шлют его после входа и при
+    каждом обновлении токена Firebase; без этого push некуда отправлять."""
+    current_user.fcm_token = payload.token
+    await session.commit()
+
+
+@router.delete("/fcm-token", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_fcm_token(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Выход из аккаунта: уведомления на это устройство больше не идут."""
+    current_user.fcm_token = None
+    await session.commit()

@@ -21,6 +21,9 @@ os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL", "postgresql+asyncpg://tur_tuk:tur_tuk@localhost:5433/tur_tuk"
 )
 os.environ.setdefault("MEDIA_DIR", os.path.join(os.path.dirname(__file__), ".media"))
+# Все тесты шлют коды с одного адреса — лимит на IP проверяется отдельно,
+# а здесь он помешал бы остальным сценариям входа.
+os.environ.setdefault("SMS_MAX_PER_IP_HOUR", "100000")
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient

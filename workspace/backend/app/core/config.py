@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -31,8 +32,13 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 30
     jwt_refresh_token_expire_days: int = 30
 
-    sms_code_length: int = 4
+    sms_code_length: int = 6
     sms_code_ttl_minutes: int = 5
+    # Защита от перебора и SMS-pumping (накрутка отправок сжигает баланс SMS):
+    sms_max_attempts: int = 5          # неверных вводов на один код
+    sms_resend_seconds: int = 60       # пауза между отправками на один номер
+    sms_max_per_phone_hour: int = 5    # отправок на номер в час
+    sms_max_per_ip_hour: int = 20      # отправок с одного IP в час
 
     # "sms_ru" | "twilio" — провайдер из брифа не выбран владельцем окончательно
     sms_provider: str = "sms_ru"
@@ -61,7 +67,22 @@ class Settings(BaseSettings):
     # (см. app/core/notifications.py). fcm_server_key не заведён владельцем:
     # доступ к консоли Firebase у него пока под вопросом.
     notification_provider: str = "fcm"
+    # FCM HTTP v1 (legacy `fcm/send` Google отключил в 2024): JSON ключа
+    # сервисного аккаунта Firebase — путь к файлу или сам JSON строкой.
+    fcm_service_account: str | None = None
+    # Устаревшее поле legacy-API — оставлено, чтобы старые .env не падали.
     fcm_server_key: str | None = None
+
+    @model_validator(mode="after")
+    def _forbid_unsafe_production(self) -> "Settings":
+        """Прод не стартует с дефолтным JWT-секретом или тестовым входом в
+        админку: любая из этих ошибок — это вход в админку для кого угодно."""
+        if self.environment == "production":
+            if self.jwt_secret_key.startswith("dev-insecure") or len(self.jwt_secret_key) < 32:
+                raise ValueError("JWT_SECRET_KEY: задайте случайный секрет от 32 символов")
+            if self.admin_test_login:
+                raise ValueError("ADMIN_TEST_LOGIN нельзя включать в production")
+        return self
 
 
 @lru_cache
