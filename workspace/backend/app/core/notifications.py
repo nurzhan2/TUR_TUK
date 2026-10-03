@@ -25,17 +25,26 @@ class NotificationSender(abc.ABC):
     async def send(self, user_id: int, title: str, body: str) -> None: ...
 
 
+_sender: NotificationSender | None = None
+
+
 def get_notification_sender(settings: Settings | None = None) -> NotificationSender:
+    """Один отправитель на процесс: FCM держит OAuth-токен в памяти, и
+    пересоздавать его на каждый заказ значило бы лишний запрос к Google."""
+    global _sender
     settings = settings or get_settings()
     if settings.notification_provider != "fcm":
         raise NotificationSendError(
             f"неизвестный NOTIFICATION_PROVIDER={settings.notification_provider!r}"
         )
-    from app.core.fcm import FcmSender
+    if _sender is not None:
+        return _sender
+    from app.core.fcm import FcmSender, load_service_account
 
-    if not settings.fcm_server_key:
+    if not settings.fcm_service_account:
         raise NotificationSendError(
-            "FCM выбран, но не настроен: нужен FCM_SERVER_KEY "
-            "(доступ к консоли Firebase у владельца пока под вопросом — см. бриф)"
+            "FCM не настроен: нужен FCM_SERVICE_ACCOUNT — путь к JSON-ключу сервисного "
+            "аккаунта Firebase (Project settings → Service accounts → Generate new private key)"
         )
-    return FcmSender(settings.fcm_server_key)
+    _sender = FcmSender(load_service_account(settings.fcm_service_account))
+    return _sender
