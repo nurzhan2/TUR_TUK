@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../controllers/cart_controller.dart';
 import '../../controllers/orders_controller.dart';
+import '../../core/demo/demo_mode.dart';
 import '../../core/di.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_theme.dart';
@@ -37,6 +39,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _hotel = '';
   bool _hotelMissing = false;
   PaymentMethod _payment = PaymentMethod.card;
+
+  /// Если товара нет при сборке: replace | remove | call.
+  String _ifMissing = 'replace';
 
   /// Последний ответ на проверку промокода. `null` — промокод не вводили.
   PromoResult? _promo;
@@ -125,21 +130,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _hotelMissing = false;
     });
 
-    // Имитация оплаты. Никакого редиректа в ЮKassa: демо показывают без
-    // сети, и уход в браузер посреди показа оборвал бы сценарий.
-    await Future<void>.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-
     final comment = _commentController.text.trim();
     try {
+      // Демо: имитация оплаты без ухода в браузер — демо показывают без
+      // сети, и переход посреди показа оборвал бы сценарий.
+      if (kDemoMode) await Future<void>.delayed(const Duration(milliseconds: 1500));
+      if (!mounted) return;
       final order = await context.read<OrdersController>().create(
             hotelName: _hotel,
             roomNumber: room,
             promoCode: (_promo?.valid ?? false) ? _promo!.code : null,
             comment: comment.isEmpty ? null : comment,
             paymentMethod: _payment.name,
+            ifMissing: _ifMissing,
           );
       if (!mounted) return;
+      if (!kDemoMode) {
+        // Боевой режим: страница оплаты ЮKassa во встроенном браузере
+        // (Custom Tabs / Safari View). Итог оплаты сервер узнаёт вебхуком,
+        // а гость после оплаты возвращается в приложение по return_url.
+        final url = await Di.payments.confirmationUrl(order.id);
+        await launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
+        if (!mounted) return;
+      }
       await context.read<CartController>().clear();
       if (!mounted) return;
       // Экран успеха ЗАМЕЩАЕТ чекаут: «назад» с него должно вести куда
@@ -226,6 +239,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             maxLines: 2,
             textInputAction: TextInputAction.newline,
             decoration: InputDecoration(labelText: l10n.checkoutComment),
+          ),
+          const SizedBox(height: AppSizes.gap),
+          // Как у Самоката/Лавки: сборщик не гадает и не звонит без нужды.
+          const Text(
+            'Если товара не окажется',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final (value, label) in const [
+                ('replace', 'Заменить похожим'),
+                ('remove', 'Убрать из заказа'),
+                ('call', 'Позвонить мне'),
+              ])
+                ChoiceChip(
+                  label: Text(label),
+                  selected: _ifMissing == value,
+                  onSelected: (_) => setState(() => _ifMissing = value),
+                  shape: const StadiumBorder(),
+                  showCheckmark: false,
+                  selectedColor: AppColors.accentSoft,
+                  labelStyle: TextStyle(
+                    color: _ifMissing == value ? AppColors.accent : AppColors.textPrimary,
+                    fontWeight: _ifMissing == value ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: AppSizes.gap),
           const _Hint(

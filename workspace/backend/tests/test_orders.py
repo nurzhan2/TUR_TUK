@@ -446,3 +446,72 @@ async def test_order_items_persisted_with_snapshot_price(client: AsyncClient):
         assert items[0].product_id == product.id
         assert items[0].quantity == 3
         assert float(items[0].price) == EXPENSIVE_PRICE
+
+
+
+async def test_order_keeps_if_missing_and_comment(client: AsyncClient):
+    _, token = await _make_user("41")
+    hotel = await _make_hotel("Hotel41")
+    category = await _make_category("Category41")
+    product = await _make_product("Product41", category.id, price=3000)
+
+    resp = await client.post(
+        "/orders",
+        json={
+            "hotel_name": hotel.name,
+            "room_number": "141",
+            "items": [{"product_id": product.id, "quantity": 1}],
+            "if_missing": "call",
+            "comment": "  Оставить на ресепшене  ",
+        },
+        headers=_auth(token),
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["if_missing"] == "call"
+    assert body["comment"] == "Оставить на ресепшене"
+
+    history = (await client.get("/orders/history", headers=_auth(token))).json()
+    assert history[0]["if_missing"] == "call"
+    assert history[0]["delivery_fee"] == 300  # история отдаёт разбивку суммы
+
+
+async def test_rate_only_delivered_once_and_only_own(client: AsyncClient):
+    from app.models.order import OrderStatus
+
+    user, token = await _make_user("42")
+    _, stranger_token = await _make_user("43")
+    hotel = await _make_hotel("Hotel42")
+    category = await _make_category("Category42")
+    product = await _make_product("Product42", category.id, price=3000)
+    created = await client.post(
+        "/orders",
+        json={"hotel_name": hotel.name, "room_number": "1",
+              "items": [{"product_id": product.id, "quantity": 1}]},
+        headers=_auth(token),
+    )
+    order_id = created.json()["id"]
+
+    early = await client.post(f"/orders/{order_id}/rate", json={"rating": 5}, headers=_auth(token))
+    assert early.status_code == 409
+
+    async with async_session_factory() as session:
+        order = await session.get(Order, order_id)
+        order.status = OrderStatus.DELIVERED
+        await session.commit()
+
+    stranger = await client.post(f"/orders/{order_id}/rate", json={"rating": 1}, headers=_auth(stranger_token))
+    assert stranger.status_code == 404
+
+    bad = await client.post(f"/orders/{order_id}/rate", json={"rating": 6}, headers=_auth(token))
+    assert bad.status_code == 422
+
+    ok = await client.post(
+        f"/orders/{order_id}/rate", json={"rating": 4, "comment": "Быстро!"}, headers=_auth(token)
+    )
+    assert ok.status_code == 200
+    assert ok.json()["rating"] == 4
+    assert ok.json()["rating_comment"] == "Быстро!"
+
+    again = await client.post(f"/orders/{order_id}/rate", json={"rating": 1}, headers=_auth(token))
+    assert again.status_code == 409

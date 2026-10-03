@@ -13,6 +13,16 @@
   <div class="card stat"><div class="k">Выручка за 7 дней</div><div class="v">{{ stats.revenue_week|money }}</div></div>
 </div>
 
+{% if stats.rating_count %}
+<div class="card" style="margin-top:16px">
+  <div class="row">
+    <div><div class="muted" style="font-size:13px">Оценка доставок за 30 дней</div>
+      <div style="font-size:24px;font-weight:700"><span style="color:#e0a100">★</span> {{ '%.1f'|format(stats.rating_avg) }} <span class="muted" style="font-size:14px;font-weight:400">из 5 · {{ stats.rating_count }} оценок</span></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if stats.products == 0 or stats.products_no_photo or stats.products_hidden %}
 <div class="card" style="margin-top:16px">
   <h2>Каталог</h2>

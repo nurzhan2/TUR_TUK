@@ -18,6 +18,15 @@ class OrderCreate(BaseModel):
     promo_code: str | None = None
     # Выбор гостя на чекауте; передаётся в ЮKassa при создании платежа.
     payment_method: Literal["card", "sbp"] | None = None
+    # Если товара нет при сборке: заменить похожим / убрать / позвонить.
+    if_missing: Literal["replace", "remove", "call"] = "replace"
+    # «Оставить на ресепшене», «позвонить из лобби» — видит сборщик и курьер.
+    comment: str | None = Field(default=None, max_length=500)
+
+
+class OrderRateIn(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str | None = Field(default=None, max_length=1000)
 
 
 class OrderStatusUpdate(BaseModel):
@@ -36,6 +45,10 @@ class OrderOut(BaseModel):
     discount: float = 0
     delivery_fee: float = 0
     payment_method: str | None = None
+    if_missing: str = "replace"
+    comment: str | None = None
+    rating: int | None = None
+    rating_comment: str | None = None
     hotel_name: str
     room_number: str
     delivery_photo_url: str | None

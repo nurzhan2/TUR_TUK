@@ -45,6 +45,7 @@ class OrdersController extends ChangeNotifier {
     String? promoCode,
     String? comment,
     String? paymentMethod,
+    String ifMissing = 'replace',
   }) async {
     try {
       final order = await Di.orders.create(
@@ -53,6 +54,7 @@ class OrdersController extends ChangeNotifier {
         promoCode: promoCode,
         comment: comment,
         paymentMethod: paymentMethod,
+        ifMissing: ifMissing,
       );
       lastCreated = order;
       // Новый заказ кладём в начало списка сразу, не дожидаясь `load()`:

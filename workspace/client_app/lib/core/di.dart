@@ -5,6 +5,7 @@ import '../data/cart_repository.dart';
 import '../data/catalog_repository.dart';
 import '../data/chat_repository.dart';
 import '../data/orders_repository.dart';
+import '../data/payments_repository.dart';
 import '../data/promo_repository.dart';
 import 'demo/demo_mode.dart';
 import 'network/api_client.dart';
@@ -46,6 +47,11 @@ class Di {
 
   // Промокоды живут в админке: когда контент приходит с сервера, проверка
   // тоже идёт туда (`POST /promo/validate` публичный, токен не нужен).
+  static PaymentsRepository? _payments;
+
+  /// Только боевой режим: в демо оплата имитируется на чекауте.
+  static PaymentsRepository get payments => _payments ??= PaymentsRepository(api);
+
   static PromoRepository get promo => _promo ??= kDemoMode && !kContentFromApi
       ? const DemoPromoRepository()
       : ApiPromoRepository(api);

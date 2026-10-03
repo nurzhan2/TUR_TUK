@@ -22,6 +22,7 @@ abstract class OrdersRepository {
     String? promoCode,
     String? comment,
     String? paymentMethod,
+    String ifMissing = 'replace',
   });
 
   Future<Order> repeat(int id);
@@ -58,6 +59,7 @@ class DemoOrdersRepository implements OrdersRepository {
     String? promoCode,
     String? comment,
     String? paymentMethod,
+    String ifMissing = 'replace',
   }) async {
     await Future<void>.delayed(kDemoLatency);
     final state = DemoState.instance;
@@ -238,6 +240,7 @@ class ApiOrdersRepository implements OrdersRepository {
     String? promoCode,
     String? comment,
     String? paymentMethod,
+    String ifMissing = 'replace',
   }) async {
     // Позиции бэкенд берёт НЕ из корзины, а из тела запроса
     // (`OrderCreate.items`), поэтому корзина читается перед оформлением.
@@ -257,6 +260,8 @@ class ApiOrdersRepository implements OrdersRepository {
         'promo_code': promoCode.trim(),
       // card | sbp — сервер сохраняет выбор и передаёт его в ЮKassa.
       'payment_method': ?paymentMethod,
+      // replace | remove | call — что делать сборщику, если товара нет.
+      'if_missing': ifMissing,
     }) as Map<String, dynamic>;
     return Order.fromJson(body);
   }

@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Enum, ForeignKey, Numeric, String
+from sqlalchemy import Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -55,6 +55,14 @@ class Order(TimestampMixin, Base):
     delivery_fee: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, server_default="0")
     # Выбор гостя на чекауте: card | sbp. Передаётся в ЮKassa при оплате.
     payment_method: Mapped[str | None] = mapped_column(String(16))
+    # Если товара не оказалось при сборке: replace — похожим, remove — убрать
+    # из заказа, call — позвонить гостю. Как у Самоката/Лавки: сборщик не
+    # гадает и не звонит без нужды.
+    if_missing: Mapped[str] = mapped_column(String(16), nullable=False, server_default="replace")
+    comment: Mapped[str | None] = mapped_column(String(500))
+    # Оценка гостя после доставки (1–5) — контроль качества курьеров.
+    rating: Mapped[int | None] = mapped_column(Integer)
+    rating_comment: Mapped[str | None] = mapped_column(String(1000))
     payment_status: Mapped[OrderPaymentStatus] = mapped_column(
         Enum(OrderPaymentStatus, name="order_payment_status", create_type=False,
              values_callable=lambda enum_cls: [e.value for e in enum_cls]),

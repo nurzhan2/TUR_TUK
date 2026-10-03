@@ -70,6 +70,20 @@
         {% if order.payment_status.value == 'paid' %}<span class="pill ok">Оплачен</span>{% elif order.payment_status.value == 'failed' %}<span class="pill bad">Ошибка оплаты</span>{% else %}<span class="pill">Не оплачен</span>{% endif %}
         {% if order.payment_method %}<span class="pill">{{ 'Карта' if order.payment_method == 'card' else 'СБП' }}</span>{% endif %}
       </div>
+      <div style="margin-top:12px">
+        <div class="muted" style="font-size:12px">Если товара нет</div>
+        <b>{{ {'replace': 'Заменить похожим', 'remove': 'Убрать из заказа', 'call': 'Позвонить гостю'}.get(order.if_missing, order.if_missing) }}</b>
+      </div>
+      {% if order.comment %}
+      <div class="alert info" style="margin:12px 0 0">💬 {{ order.comment }}</div>
+      {% endif %}
+      {% if order.rating %}
+      <div style="margin-top:12px">
+        <div class="muted" style="font-size:12px">Оценка гостя</div>
+        <span style="color:#e0a100;font-size:18px">{{ '★' * order.rating }}{{ '☆' * (5 - order.rating) }}</span>
+        {% if order.rating_comment %}<div class="muted">«{{ order.rating_comment }}»</div>{% endif %}
+      </div>
+      {% endif %}
     </div>
 
     <div class="card">

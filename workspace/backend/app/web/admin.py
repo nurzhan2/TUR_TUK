@@ -174,6 +174,17 @@ async def dashboard(
             )
         ),
         "products": await scalar(select(func.count(Product.id))),
+        # Средняя оценка доставок за 30 дней — главный сигнал качества курьеров.
+        "rating_avg": await scalar(
+            select(func.avg(Order.rating)).where(
+                Order.rating.is_not(None), Order.created_at >= day_start - timedelta(days=29)
+            )
+        ),
+        "rating_count": await scalar(
+            select(func.count(Order.id)).where(
+                Order.rating.is_not(None), Order.created_at >= day_start - timedelta(days=29)
+            )
+        ),
         "products_hidden": await scalar(
             select(func.count(Product.id)).where(Product.is_available.is_(False))
         ),

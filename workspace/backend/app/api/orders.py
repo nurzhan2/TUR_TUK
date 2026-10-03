@@ -30,6 +30,7 @@ from app.schemas.order import (
     OrderHistoryItemOut,
     OrderHistoryOut,
     OrderOut,
+    OrderRateIn,
     OrderStatusUpdate,
     RepeatOrderOut,
     RepeatSkippedItem,
@@ -168,6 +169,8 @@ async def create_order(
         delivery_fee=delivery_fee,
         total=subtotal - discount + delivery_fee,
         payment_method=payload.payment_method,
+        if_missing=payload.if_missing,
+        comment=(payload.comment or "").strip() or None,
         hotel_name=hotel.name,
         room_number=payload.room_number,
         promo_id=promo.id if promo is not None else None,
@@ -236,6 +239,14 @@ def _history_out(order: Order) -> OrderHistoryOut:
         courier_id=order.courier_id,
         status=order.status,
         total=float(order.total),
+        subtotal=float(order.subtotal) if order.subtotal is not None else None,
+        discount=float(order.discount or 0),
+        delivery_fee=float(order.delivery_fee or 0),
+        payment_method=order.payment_method,
+        if_missing=order.if_missing,
+        comment=order.comment,
+        rating=order.rating,
+        rating_comment=order.rating_comment,
         hotel_name=order.hotel_name,
         room_number=order.room_number,
         delivery_photo_url=order.delivery_photo_url,
@@ -383,6 +394,31 @@ async def repeat_order(
         skipped_items=skipped,
         warning=warning,
     )
+
+
+@router.post("/{order_id}/rate", response_model=OrderOut)
+async def rate_order(
+    order_id: int,
+    payload: OrderRateIn,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> Order:
+    """Оценка гостя после доставки (1–5 и комментарий). Один раз: оценка —
+    это отзыв о конкретной доставке, переписывать её задним числом нельзя."""
+    order = await session.get(Order, order_id)
+    if order is None or order.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="заказ не найден")
+    if order.status != OrderStatus.DELIVERED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="оценить можно только доставленный заказ"
+        )
+    if order.rating is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="заказ уже оценён")
+    order.rating = payload.rating
+    order.rating_comment = (payload.comment or "").strip() or None
+    await session.commit()
+    await session.refresh(order)
+    return order
 
 
 @router.get("/{order_id}", response_model=OrderOut)
