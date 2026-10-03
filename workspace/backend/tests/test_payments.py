@@ -22,7 +22,7 @@ from app.core.yookassa import YookassaClient, YookassaError
 from app.db.session import async_session_factory
 from app.models.category import Category
 from app.models.hotel import Hotel
-from app.models.order import Order, OrderPaymentStatus
+from app.models.order import Order, OrderPaymentStatus, OrderStatus
 from app.models.order_item import OrderItem
 from app.models.payment import Payment, PaymentMethod, PaymentStatus
 from app.models.product import Product
@@ -377,3 +377,49 @@ async def test_create_payment_without_yookassa_credentials_is_502(client: AsyncC
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.post("/payments/create", json={"order_id": order.id}, headers=_auth(token))
     assert resp.status_code == 502
+
+
+
+async def test_double_tap_pay_returns_same_payment(client: AsyncClient, fake_yookassa: FakeYookassaClient):
+    """Двойное нажатие «Оплатить» не создаёт второй платёж — иначе гость
+    мог бы заплатить за один заказ дважды."""
+    user, token = await _make_user("21")
+    order = await _make_order(user, "21")
+
+    first = await client.post("/payments/create", json={"order_id": order.id}, headers=_auth(token))
+    second = await client.post("/payments/create", json={"order_id": order.id}, headers=_auth(token))
+
+    assert first.status_code == 201 and second.status_code == 201
+    assert first.json()["confirmation_url"] == second.json()["confirmation_url"]
+    assert len(fake_yookassa.created) == 1
+
+
+async def test_payment_method_and_stable_idempotence_key_go_to_yookassa(
+    client: AsyncClient, fake_yookassa: FakeYookassaClient
+):
+    user, token = await _make_user("22")
+    order = await _make_order(user, "22")
+    async with async_session_factory() as session:
+        fresh = await session.get(Order, order.id)
+        fresh.payment_method = "sbp"
+        await session.commit()
+
+    resp = await client.post("/payments/create", json={"order_id": order.id}, headers=_auth(token))
+
+    assert resp.status_code == 201
+    assert fake_yookassa.last_method == "sbp"
+    assert fake_yookassa.last_key == f"turtuk-order-{order.id}-attempt-1"
+
+
+async def test_cancelled_order_cannot_be_paid(client: AsyncClient, fake_yookassa: FakeYookassaClient):
+    user, token = await _make_user("23")
+    order = await _make_order(user, "23")
+    async with async_session_factory() as session:
+        fresh = await session.get(Order, order.id)
+        fresh.status = OrderStatus.CANCELLED
+        await session.commit()
+
+    resp = await client.post("/payments/create", json={"order_id": order.id}, headers=_auth(token))
+
+    assert resp.status_code == 409
+    assert fake_yookassa.created == []
