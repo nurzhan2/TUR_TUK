@@ -27,13 +27,17 @@ class TokenResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
-    dob: date
+    # Необязательна: в приложении поле не обязательное (ТЗ — nice-to-have),
+    # и требование её здесь давало 422 каждому гостю, кто её не указал.
+    dob: date | None = None
     hotel_name: str = Field(..., min_length=1, max_length=255)
     room_number: str = Field(..., min_length=1, max_length=50)
 
     @field_validator("dob")
     @classmethod
-    def _dob_not_in_future(cls, value: date) -> date:
+    def _dob_not_in_future(cls, value: date | None) -> date | None:
+        if value is None:
+            return value
         if value > datetime.now(timezone.utc).date():
             raise ValueError("дата рождения не может быть в будущем")
         return value

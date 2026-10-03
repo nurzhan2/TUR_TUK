@@ -131,23 +131,39 @@ class ApiAuthRepository implements AuthRepository {
     return _cached!;
   }
 
-  /// ИЗВЕСТНЫЙ ПРОБЕЛ: эндпоинта «кто я» на бэкенде нет — в `app/api/auth.py`
-  /// только `send-code`, `verify-code` и `register`. Поэтому профиль здесь
-  /// живёт ровно столько, сколько живёт процесс: сохранённый токен вернёт
-  /// пользователя в приложение, но имя и отель придётся спросить заново.
-  /// Придумывать несуществующий `GET /auth/me` хуже: он молча упадёт 404
-  /// на первом же живом запуске.
+  /// Профиль по сохранённому токену — `GET /auth/me`.
   @override
   Future<UserProfile?> currentUser() async {
     if (_cached != null) return _cached;
     final token = await _storage.read();
     if (token == null) return null;
     _api.accessToken = token;
-    return null;
+    // Профиль восстанавливается по токену после перезапуска приложения.
+    try {
+      final body = await _api.get('/auth/me') as Map<String, dynamic>;
+      _cached = UserProfile.fromJson(body);
+      return _cached;
+    } on ApiException catch (error) {
+      // Токен истёк или отозван — разлогиниваем, а не держим «полувход».
+      if (error.statusCode == 401 || error.statusCode == 403) {
+        await logout();
+      }
+      return null;
+    } catch (_) {
+      // Нет сети: токен остаётся, профиль подтянется при следующем запуске.
+      return null;
+    }
   }
 
   @override
   Future<void> logout() async {
+    // Отвязать устройство от push до сброса токена — после него сервер
+    // уже не узнает, чьё это устройство. Ошибка сети выход не блокирует.
+    if (_api.accessToken != null) {
+      try {
+        await _api.delete('/auth/fcm-token');
+      } catch (_) {}
+    }
     _cached = null;
     _api.accessToken = null;
     await _storage.clear();
