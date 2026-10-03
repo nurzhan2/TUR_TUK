@@ -29,6 +29,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Возврат из ЮKassa после оплаты: return_url = turtuk://payment/return.
+                 Браузер отдаёт ссылку приложению, гость снова в TUR TUK. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="turtuk" android:host="payment"/>
+            </intent-filter>
+            <!-- Ссылка turtuk://payment/return только возвращает гостя в приложение;
+                 маршрутизатор её не разбирает (иначе GoRouter показал бы «не найдено»). -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

@@ -80,6 +80,7 @@ class Order {
     this.hotelLng = 0,
     this.courierLat = 0,
     this.courierLng = 0,
+    this.rating,
   });
 
   final int id;
@@ -99,6 +100,9 @@ class Order {
   final double courierLat;
   final double courierLng;
 
+  /// Оценка гостя после доставки (1–5); null — ещё не оценил.
+  final int? rating;
+
   /// Сумма позиций ДО скидки и доставки. Считается из позиций, а не хранится
   /// отдельным полем: два источника одного числа однажды разойдутся.
   double get subtotal => items.fold(0.0, (sum, item) => sum + item.lineTotal);
@@ -110,6 +114,7 @@ class Order {
     String? courierName,
     double? hotelLat,
     double? hotelLng,
+    int? rating,
   }) {
     return Order(
       id: id,
@@ -128,6 +133,7 @@ class Order {
       hotelLng: hotelLng ?? this.hotelLng,
       courierLat: courierLat ?? this.courierLat,
       courierLng: courierLng ?? this.courierLng,
+      rating: rating ?? this.rating,
     );
   }
 
@@ -154,5 +160,6 @@ class Order {
         hotelLng: (json['hotel_lon'] as num?)?.toDouble() ?? 0,
         courierLat: (json['courier_lat'] as num?)?.toDouble() ?? 0,
         courierLng: (json['courier_lon'] as num?)?.toDouble() ?? 0,
+        rating: json['rating'] as int?,
       );
 }

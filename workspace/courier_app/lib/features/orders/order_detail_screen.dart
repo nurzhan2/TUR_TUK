@@ -72,6 +72,8 @@ class OrderDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _ItemsCard(order: order),
+          const SizedBox(height: 12),
+          _GuestNotes(order: order),
           const SizedBox(height: AppSizes.gap),
           _ClientCard(order: order),
           const SizedBox(height: AppSizes.gap),
@@ -471,6 +473,54 @@ class _TrackingProblemBanner extends StatelessWidget {
             },
             child: Text(action),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Пожелания гостя: что делать, если товара нет, и комментарий к заказу.
+/// Стоит сразу под составом — сборщик видит это ДО того, как начнёт сборку.
+class _GuestNotes extends StatelessWidget {
+  const _GuestNotes({required this.order});
+
+  final Order order;
+
+  @override
+  Widget build(BuildContext context) {
+    final comment = order.comment;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.swap_horiz_rounded, size: 20, color: AppColors.textMuted),
+              const SizedBox(width: 8),
+              const Text('Если товара нет: ', style: TextStyle(color: AppColors.textMuted)),
+              Expanded(
+                child: Text(order.ifMissingLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+          if (comment != null && comment.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.chat_bubble_outline_rounded, size: 20, color: AppColors.accent),
+                const SizedBox(width: 8),
+                Expanded(child: Text(comment, style: const TextStyle(fontSize: 15))),
+              ],
+            ),
+          ],
         ],
       ),
     );

@@ -73,6 +73,15 @@ class OrdersController extends ChangeNotifier {
     }
   }
 
+  /// Оценка доставки. Ошибку пробрасываем — экран покажет её и не закроется.
+  Future<void> rate(int id, int rating, {String? comment}) async {
+    final updated = await Di.orders.rate(id, rating, comment: comment);
+    orders = [
+      for (final order in orders) order.id == id ? updated : order,
+    ];
+    notifyListeners();
+  }
+
   /// Повтор заказа: в демо позиции складываются в КОРЗИНУ, а не создают
   /// заказ молча (см. `DemoState.repeatOrder`). Экран после этого ведёт
   /// на корзину, и клиент подтверждает состав сам.

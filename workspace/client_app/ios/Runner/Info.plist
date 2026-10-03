@@ -66,5 +66,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Возврат из ЮKassa: return_url = turtuk://payment/return -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.turtuk.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>turtuk</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Ссылка только возвращает в приложение, роутер её не разбирает -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 </dict>
 </plist>

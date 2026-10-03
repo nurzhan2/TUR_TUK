@@ -30,10 +30,19 @@ abstract class OrdersRepository {
   /// Живой поток состояния заказа. В демо тикает раз в 4 секунды: двигает
   /// курьера и переключает статус.
   Stream<Order> track(int id);
+
+  /// Оценка доставки 1–5 с отзывом; один раз, только доставленный заказ.
+  Future<Order> rate(int id, int rating, {String? comment});
 }
 
 class DemoOrdersRepository implements OrdersRepository {
   const DemoOrdersRepository();
+
+  @override
+  Future<Order> rate(int id, int rating, {String? comment}) async {
+    await Future<void>.delayed(kDemoLatency);
+    return DemoState.instance.orderById(id).copyWith(rating: rating);
+  }
 
   /// Шаг демо-трекинга. Четыре секунды — компромисс показа: за минуту
   /// разговора заказ успевает проехать весь путь и доставиться, а движение
@@ -112,6 +121,15 @@ class DemoOrdersRepository implements OrdersRepository {
 /// чем честно спрашивать `GET /orders/{id}`.
 class ApiOrdersRepository implements OrdersRepository {
   ApiOrdersRepository(this._api);
+
+  @override
+  Future<Order> rate(int id, int rating, {String? comment}) async {
+    final body = await _api.post('/orders/$id/rate', body: {
+      'rating': rating,
+      if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+    }) as Map<String, dynamic>;
+    return _withHotelPoint(Order.fromJson(body));
+  }
 
   final ApiClient _api;
 

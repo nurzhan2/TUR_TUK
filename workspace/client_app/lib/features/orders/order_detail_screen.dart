@@ -144,8 +144,130 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           const SizedBox(height: AppSizes.gap),
           _DeliveryPhoto(asset: order.deliveryPhotoAsset!),
         ],
+        if (order.status == OrderStatus.delivered) ...[
+          const SizedBox(height: 24),
+          _RateCard(order: order),
+        ],
         const SizedBox(height: 24),
       ],
+    );
+  }
+}
+
+/// Оценка доставки — один раз, после доставки. Звёзды крупные, отзыв
+/// необязателен: чем меньше трения, тем больше оценок у владелицы.
+class _RateCard extends StatefulWidget {
+  const _RateCard({required this.order});
+
+  final Order order;
+
+  @override
+  State<_RateCard> createState() => _RateCardState();
+}
+
+class _RateCardState extends State<_RateCard> {
+  int _stars = 0;
+  bool _sending = false;
+  final _comment = TextEditingController();
+
+  @override
+  void dispose() {
+    _comment.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    setState(() => _sending = true);
+    try {
+      await context.read<OrdersController>().rate(
+            widget.order.id,
+            _stars,
+            comment: _comment.text,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось отправить оценку — попробуйте ещё раз')),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rated = widget.order.rating;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.accentSoft,
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+      ),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 250),
+        child: rated != null
+            ? Row(
+                children: [
+                  const Text('Ваша оценка', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  for (var i = 1; i <= 5; i++)
+                    Icon(i <= rated ? Icons.star_rounded : Icons.star_outline_rounded,
+                        color: const Color(0xFFE0A100)),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Как прошла доставка?',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 1; i <= 5; i++)
+                        IconButton(
+                          iconSize: 36,
+                          onPressed: _sending ? null : () => setState(() => _stars = i),
+                          icon: AnimatedScale(
+                            scale: i <= _stars ? 1.15 : 1,
+                            duration: const Duration(milliseconds: 150),
+                            child: Icon(
+                              i <= _stars ? Icons.star_rounded : Icons.star_outline_rounded,
+                              color: const Color(0xFFE0A100),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (_stars > 0) ...[
+                    TextField(
+                      controller: _comment,
+                      maxLines: 2,
+                      maxLength: 1000,
+                      decoration: const InputDecoration(
+                        hintText: 'Комментарий (необязательно)',
+                        counterText: '',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          shape: const StadiumBorder(),
+                          minimumSize: const Size.fromHeight(46),
+                        ),
+                        onPressed: _sending ? null : _send,
+                        child: Text(_sending ? 'Отправляем…' : 'Отправить оценку'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+      ),
     );
   }
 }

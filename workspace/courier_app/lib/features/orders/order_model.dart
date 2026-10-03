@@ -68,6 +68,8 @@ class Order {
     this.clientPhone = '',
     this.courierId,
     this.deliveryPhotoAsset,
+    this.ifMissing = 'replace',
+    this.comment,
     this.hotelLat = kemerLat,
     this.hotelLng = kemerLng,
     this.courierLat = depotLat,
@@ -113,6 +115,18 @@ class Order {
   final String clientPhone;
   final int? courierId;
   final String? deliveryPhotoAsset;
+
+  /// Если товара нет при сборке: replace | remove | call — выбор гостя.
+  final String ifMissing;
+
+  /// Пожелание гостя: «оставить на ресепшене», «позвонить из лобби».
+  final String? comment;
+
+  String get ifMissingLabel => switch (ifMissing) {
+        'remove' => 'Убрать из заказа',
+        'call' => 'Позвонить гостю',
+        _ => 'Заменить похожим',
+      };
   final double hotelLat;
   final double hotelLng;
   final double courierLat;
@@ -146,6 +160,8 @@ class Order {
       clientPhone: clientPhone,
       courierId: courierId ?? this.courierId,
       deliveryPhotoAsset: deliveryPhotoAsset ?? this.deliveryPhotoAsset,
+      ifMissing: ifMissing,
+      comment: comment,
       hotelLat: hotelLat,
       hotelLng: hotelLng,
       courierLat: courierLat ?? this.courierLat,
